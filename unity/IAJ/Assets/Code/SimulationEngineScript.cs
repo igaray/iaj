@@ -382,14 +382,14 @@ public class SimulationEngineScript : MonoBehaviour {
     private string outputText = "";
     private StringQueue outputQueue;
 
-    private ThreadTest oThreadTest1;
-    private ThreadTest oThreadTest2;
-
-	private NetworkTest oNetworkTest;
+//    private ThreadTest oThreadTest1;
+//    private ThreadTest oThreadTest2;
+//
+//    private NetworkTest oNetworkTest;
 	
-    private Thread oThread1;
-    private Thread oThread2;
-	private Thread oThread3;
+//    private Thread oThread1;
+//    private Thread oThread2;
+//    private Thread oThread3;
 
     // Use this for initialization
     void Start () {
@@ -405,9 +405,9 @@ public class SimulationEngineScript : MonoBehaviour {
 //		oThread2 = new Thread(new ThreadStart(oThreadTest2.run));
 //		oThread2.Start();
 
-		oNetworkTest = new NetworkTest("network", outputQueue);
-		oThread3 = new Thread(new ThreadStart(oNetworkTest.run));
-		oThread3.Start();
+//		oNetworkTest = new NetworkTest("network", outputQueue);
+//		oThread3 = new Thread(new ThreadStart(oNetworkTest.run));
+//		oThread3.Start();
 		
         outputQueue.Enqueue("done.\n");
 		print("ok");
@@ -436,6 +436,6 @@ public class SimulationEngineScript : MonoBehaviour {
 	void OnApplicationQuit() {
 //		oThread1.Abort();
 //		oThread2.Abort();
-		oThread3.Abort();
+//		oThread3.Abort();
 	}
 }
