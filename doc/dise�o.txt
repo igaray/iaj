@@ -1,0 +1,93 @@
+el entorno de simulacion corre integramente dentro de unity,
+incluyendo todo el estado del mundo, la generacion de percepciones,
+manejo de acciones y manejo de conexiones
+cada agente es un proceso prolog que se conecta al servidor
+
+vamos a implementar una libreria en prolog para la capa de conexion
+que utilice XML RPC para transmitir las percepciones y acciones
+
+TERRENO
+
+
+MANEJO DE ANIMACIONEs
+   va a tener que meter un objeto agente por cada uno que se conecte,
+y que sean distinguibles mediante color, nombre, etc
+
+GRAFO
+   el grafo de navegacion para el calculo de caminos sera una grilla
+implicita a partir de una grilla
+   hay que ver como guardar el estado de cada celda (fundamentalmente
+si es atravesable o no)
+
+   seria interesante como objetivo hacer que el codigo de manejo del
+grafo de navegacion sea lo suficientemente flexible para que en el
+futuro no sea un grafo completo y no sea implicito, ni basado en una
+grilla sino ungrafo libre al estilo massim
+
+SIMULADOR
+       esquema de comunicacion asincronica
+       el simulador tendra un thread / objeto / script / loquesea que
+corre concurrentemete por cada conexion de agente
+       (como el entity de massim)
+       el agente pide la percepcion, el manejador de conexion MC
+recibe el pedido, le manda la percepcion, escucha por una accion
+       el agente recibe percept, procesa, devuelve accion
+       el MC recibe accion, y la pone en una cola global de acciones
+de un objeto action handler AH
+       la resolucion de conflictos entre acciones toma lugar dentro
+del AH por orden de llegada FIFO
+       esto causara algunos bugs, es aceptable este diseño?
+
+ACCIONES
+   duraciones?
+   la duracion de la animacion correspondiente esta sujeta a la
+duracion de la accion
+   la resolucion de conflicto: ver simulador
+   representacion de acciones?
+   representacion de acciones en xml para reglas genericas de entorno?
+   conjunto de efectos aplicables a acciones especifcados en el xml
+de la configuracion de entorno
+
+   pedis percepto
+   mandas accion
+   esperas resultado de accion
+
+   para manejo de acciones con duracion no instantanea
+
+   inicialmente:
+       noop
+       move
+       attack
+
+   <action name = "attack">
+       <effects>
+           <effect type="dec" param="str" value="8">
+           <effect type="inc" param="def" value="2">
+       </effects>
+
+   sistema en el cual los agnetes no conozcan las relgas del juego,
+solo conocen sus acciones disponibles
+
+representacion en xml?
+
+PERCEPCIONES
+   representacion en xml?
+   Pregunta: hay direccion?
+   linea de vista?
+
+REGLAS DE SIMULACION
+   predefinidas?
+   generales?
+
+
+COMUNICACION ENTRE AGENTES
+
+
+TODO
+   el simulador de entorno - esqueleto basico de codigo
+   manejo de conexiones - esquelo basico de codigo
+   creacion del terreno y del grafo de navegacion implicito
+   UI minima
+   animacion basica de movimiento y ataque
+   creacion de percepciones
+   manejo de acciones
