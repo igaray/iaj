@@ -1,0 +1,154 @@
+TODO
+
+  [x] add a proper protocol for connecting/reconnecting agents, 
+      with an initial message specifying simulation parameters,
+  [ ] and a final message to indicate disconnection and simulation end
+  [x] read configuration file which specifies:
+      - terrain map (size, traversability, buildings)
+          n_of_arrows(15).
+          n_of_columns(20).
+          % cell_land(Pos, Land)
+          % Land:
+          % plain
+          % water
+          % mountain
+          % forest
+      - object locations and properties
+      - entity descriptions
+          % object_at(Object, Pos)
+          % Object/Content
+          % [ObjType, ObjName, ObjDescription]
+          at([treasure, t1], [5,7]).
+          entity_descr([treasure, t1], []).
+          at([hostel, h1], [12,5]).
+          entity_descr([hostel, h1], []).
+          at([opening_potion, op1], [4,8]).
+          entity_descr([opening_potion, op1], []).
+
+          at([sleep_potion, sp1], [8,7]).
+          entity_descr([sleep_potion, sp1], []).
+
+          at([grave, g1], [7,11]).
+          entity_descr([grave, g1], [[open, false]]).
+
+          at([grave, g3], [2,7]).
+          entity_descr([grave, g3], [[open, false]]).
+          has([grave, g3], [treasure, te]).
+  [ ] reimplement features from original:
+
+  [ ] define percept contents and how to create them
+
+  [ ] creacion del terreno y del grafo de navegacion implicito
+  [ ] UI minima
+  [ ] animacion basica de movimiento y ataque
+  [ ] creacion de percepciones
+  [ ] manejo de acciones
+
+SIMULADOR
+  El entorno de simulacion corre integramente dentro de unity,
+  incluyendo todo el estado del mundo, la generacion de percepciones,
+  manejo de acciones y manejo de conexiones
+  cada agente es un proceso prolog que se conecta al servidor
+
+  vamos a implementar una libreria en prolog para la capa de conexion
+  que utilice XML RPC para transmitir las percepciones y acciones
+
+  - esquema de comunicacion asincronica
+  - el simulador tendra un thread / objeto / script / loquesea 
+    que corre concurrentemete por cada conexion de agente
+    (como el entity de massim)
+  - el agente pide la percepcion, el manejador de conexion MC
+    recibe el pedido, le manda la percepcion, escucha por una accion
+  - el agente recibe percept, procesa, devuelve accion
+  - el MC recibe accion, y la pone en una cola global de acciones
+    de un objeto action handler AH
+  - la resolucion de conflictos entre acciones toma lugar dentro
+    del AH por orden de llegada FIFO
+  - esto causara algunos bugs, es aceptable este diseño?
+
+  pedis percept
+  mandas accion
+  esperas resultado de accion
+
+  - el agente es capaz de percibir (solicitar y recibir percepción) durante la ejecución de una acción ? !
+  para manejo de acciones con duracion no instantanea
+
+  - percibe si está ejecutando una acción o no (y cuál). 
+    Le permite saber si terminó de ejecutarse la acción 
+    (ya sea satisfactoriamente o no, y determinar esto último será 
+    responsabilidad del agente)
+
+REGLAS DE SIMULACION
+   predefinidas?
+   generales?
+
+  - edificaciones son posiciones rodeadas por pared, con (al menos) 
+    una entrada. 
+    Una edificación contiene un grupo de posiciones. 
+    Podría considerarse una de las posiciones internas de la 
+    edificación (idealmente alguna central) como la posición en la 
+    que se encuentra la edificación (al efecto de que los agentes 
+    puedan usar esta referencia para dirigirse hacia la edificación).
+
+ACCIONES
+  duraciones?
+    la duracion de la animacion correspondiente esta sujeta a la
+    duracion de la accion
+    - ¿duración de acciones?. Al menos las acciones de desplazamiento tienen duración.
+
+  la resolucion de conflicto: ver simulador
+  representacion de acciones?
+  representacion de acciones en xml para reglas genericas de entorno?
+  conjunto de efectos aplicables a acciones especifcados en el xml
+  de la configuracion de entorno
+
+  inicialmente:
+    noop
+    move
+    attack
+
+  representacion en xml?
+    <action name = "attack">
+      <effects>
+          <effect type="dec" param="str" value="8">
+          <effect type="inc" param="def" value="2">
+      </effects>
+    </action>
+    
+PERCEPCIONES
+  representacion en xml?
+  Pregunta: hay direccion?
+  linea de vista?
+
+  - definir información en la percepción: posición-XY y nodo actual de cada objeto en el rango de visión.
+
+  - La percepción podría reflejar que ciertos objetos quedan ocultos 
+    por otros que se interponen en la visión. 
+    Implementación: primero se determinan objetos en rango empleando 
+    una esfera, y luego se "tiran" raycasts a los objetos hallados 
+    para determinar si se encuentran visibles.  
+
+  - formato de la percepción recibida por los agentes PROLOG: 
+    lista (conjunto) de hechos. 
+    Por simplicidad, el entorno puede generar la percepción directamente 
+    en este formato (en lugar de un esquema más general con XML).
+
+TERRENO
+
+MANEJO DE ANIMACIONES
+
+    va a tener que meter un objeto agente por cada uno que se conecte,
+    y que sean distinguibles mediante color, nombre, etc
+
+GRAFO
+  el grafo de navegacion para el calculo de caminos sera una grilla
+  implicita a partir de una grilla
+  hay que ver como guardar el estado de cada celda (fundamentalmente
+  si es atravesable o no)
+  seria interesante como objetivo hacer que el codigo de manejo del
+  grafo de navegacion sea lo suficientemente flexible para que en el
+  futuro no sea un grafo completo y no sea implicito, ni basado en una
+  grilla sino ungrafo libre al estilo massim
+
+COMUNICACION ENTRE AGENTES
+
