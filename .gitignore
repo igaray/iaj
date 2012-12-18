@@ -4,10 +4,20 @@
 [Tt]emp/
 [Oo]bj/
 
+#Un-ignore these specific files
+#!Library/*.asset
+#!Library/AssetImportState
+#!Library/AssetVersioning.db
+#!Library/BuildPlayer.prefs
+#!Library/ScriptMapper
+#!Library/AssetServerCacheV3
+#!Library/expandedItems
+#!Library/guidmapper
+#!Library/metadata/
+
 # OS Junk
-Thumbs.db
+[Tt]humbs.db
 .DS_Store
-thumbs.db
 
 #Project/User Preference Files
 *.sln
