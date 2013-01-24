@@ -7,7 +7,7 @@ public abstract class Entity : MonoBehaviour {
 	public string type;
 	
 	// El nombre de la entidad debe ser único entre todas las entidades
-	public string name; 
+	public string entityName; 
 	
 	//public bool   moveable; //maybe needed, possibly not
 	//public Vector3 position; //no need for position, since monobehaviour has transform
@@ -18,7 +18,7 @@ public abstract class Entity : MonoBehaviour {
 	{
 		this.description = description;
 //		this.moveable    = moveable;
-		this.name        = name;
+		this.entityName  = name;
 		this.type        = type;
 	}
 	

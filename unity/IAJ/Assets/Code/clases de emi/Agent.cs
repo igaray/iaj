@@ -26,7 +26,7 @@ public class Agent : Entity {
 	
 	void Update(){
 		
-		this.perceptNodes();
+		//this.perceptNodes();
 	}
 	
 	public void subLife(int dif) {
@@ -127,10 +127,9 @@ public class Agent : Entity {
 		
 		// TEST ONLY
 		
-		for(int i = 0; i < connections.Count; i++){
-			Debug.DrawLine(transform.position, (Vector3)((Node) connections[i]).position,Color.red);
-		}
-		//Debug.Log(connections.Count);
+//		for(int i = 0; i < connections.Count; i++){
+//			Debug.DrawLine(transform.position, (Vector3)((Node) connections[i]).position,Color.red);
+//		}
 		// TEST ONLY
 		
 		return connections;		
@@ -138,9 +137,6 @@ public class Agent : Entity {
 	
 	//check if the node is in a visible distance
 	private bool isVisibleNode(Node node){
-		//Debug.Log(nodeSize);
-		
-		
 		return (new Int3(transform.position) -
 				node.position).worldMagnitude < depthOfSight * nodeSize;
 	}

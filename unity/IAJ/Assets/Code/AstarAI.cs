@@ -10,8 +10,8 @@ public class AstarAI : MonoBehaviour {
     public Vector3 targetPosition;
 	
 	private int index = 0;
-	//private Vector3[] vectores = new Vector3[]{new Vector3(1,0,1),new Vector3(1,0,20),new Vector3(20,0,20),new Vector3(20,0,1)};
-	private Vector3[] vectores = new Vector3[]{new Vector3(1,0,30)};
+	private Vector3[] vectores = new Vector3[]{new Vector3(1,0,1),new Vector3(1,0,20),new Vector3(20,0,20),new Vector3(20,0,1)};
+	//private Vector3[] vectores = new Vector3[]{new Vector3(1,0,30)};
     
     private Seeker seeker;
     private CharacterController controller;
@@ -67,7 +67,7 @@ public class AstarAI : MonoBehaviour {
 
             targetPosition = vectores[index];
 			Debug.Log (targetPosition);
-			index = (index + 1) % 1;
+			index = (index + 1) % vectores.GetLength(0);
 			
 			seeker.StartPath (transform.position, targetPosition, OnPathComplete);
             return;
