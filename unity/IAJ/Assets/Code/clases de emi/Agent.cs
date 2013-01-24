@@ -11,16 +11,21 @@ public class Agent : Entity {
 	// private int vida_min = 0;
 	public int life;
 	public int depthOfSight;
+	private float nodeSize; //
 	
 	public List<EObject> backpack = new List<EObject>();
 	
 	public Agent(string description, string name) 
 		: base(description, "agent", name, false){
 		
-		this.life = lifeTotal;
+		this.life     = lifeTotal;
+		//this.nodeSize = AstarPath.active.astarData.gridGraph.nodeSize;
+		this.nodeSize = 2; //hardcodeado. Traté de hacerlo andar dinámicamente, pero no pude.
+						   //Es el mismo número que el node size definido en el objeto A*, por IDE	
 	}
 	
 	void Update(){
+		
 		this.perceptNodes();
 	}
 	
@@ -64,7 +69,7 @@ public class Agent : Entity {
 		p["agentsSeen"] = perceptObjects("agent");
 		p["goldSeen"]   = perceptObjects("gold");
 		//TODO:
-		// - scan map and add nodes to the perception
+		// - cast spherecast
 		return p;
 	}
 	
@@ -72,6 +77,7 @@ public class Agent : Entity {
 		Collider[] colliders = 
 			Physics.OverlapSphere(this.transform.position, 5,  1 << LayerMask.NameToLayer("perception"));
 		ArrayList aux = new ArrayList();
+		
     	foreach (Collider hit in colliders) {		
 			if (hit.GetComponent<Entity>().type == type)
 				aux.Add(hit);
@@ -83,15 +89,15 @@ public class Agent : Entity {
 		GridGraph graph = AstarPath.active.astarData.gridGraph;
 		GridNode  node  = AstarPath.active.GetNearest(transform.position).node as GridNode;
 		Node[]    nodes = graph.nodes;
+		int       index = node.GetIndex();
+		
 		int[] neighbourOffsets = graph.neighbourOffsets;
-		int index = node.GetIndex();
 		
 		List<GridNode>    connections = new List<GridNode>();
 		Queue<BFNode>     q           = new Queue<BFNode>();
 		HashSet<GridNode> visited     = new HashSet<GridNode>();
-		
-		//int index = node.GetIndex();
-
+				
+		//BFS
 		BFNode t = new BFNode(0, node);
 		q.Enqueue(t);
 		Node aux;
@@ -102,14 +108,17 @@ public class Agent : Entity {
 			if (t.depth < depthOfSight){ //si no está en el límite, agrego nodos
 				for (int i = 0; i < 8; i++){ //las 8 conexiones posibles de cada nodo
 					index = t.node.GetIndex();
-					if (t.node.GetConnection(i) && 
-						!(visited.Contains((GridNode)(nodes[index + neighbourOffsets[i]]))))
-					{						
-						aux = nodes[index + neighbourOffsets[i]];						
-						
-						if (aux.walkable){
+
+					if(t.node.GetConnection(i)){
+						aux = nodes[index + neighbourOffsets[i]];
+
+						if (!(visited.Contains((GridNode)(aux))) && //famoso if de reglón de ancho, warpeado
+							isVisibleNode(aux) &&
+							aux.walkable)
+						{	
 							visited.Add((GridNode)aux);
 							q.Enqueue(new BFNode(t.depth + 1, (GridNode)aux));
+						
 						}
 					}
 				}
@@ -121,9 +130,19 @@ public class Agent : Entity {
 		for(int i = 0; i < connections.Count; i++){
 			Debug.DrawLine(transform.position, (Vector3)((Node) connections[i]).position,Color.red);
 		}
+		//Debug.Log(connections.Count);
 		// TEST ONLY
 		
 		return connections;		
+	}
+	
+	//check if the node is in a visible distance
+	private bool isVisibleNode(Node node){
+		//Debug.Log(nodeSize);
+		
+		
+		return (new Int3(transform.position) -
+				node.position).worldMagnitude < depthOfSight * nodeSize;
 	}
 }
 
