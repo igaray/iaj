@@ -27,6 +27,7 @@ public class Agent : Entity {
 	void Update(){
 		
 		//this.perceptNodes();
+		perceptObjects("gold");
 	}
 	
 	public void subLife(int dif) {
@@ -57,7 +58,6 @@ public class Agent : Entity {
 		//TODO: 
 		// - add object to the game
 		this.backpack.Remove(obj);
-
 	}
 	
 	public override Hashtable perception(){
@@ -73,19 +73,26 @@ public class Agent : Entity {
 		return p;
 	}
 	
-	ArrayList perceptObjects(string type){
+	private List<GameObject> perceptObjects(string type){
 		Collider[] colliders = 
-			Physics.OverlapSphere(this.transform.position, 5,  1 << LayerMask.NameToLayer("perception"));
-		ArrayList aux = new ArrayList();
+			Physics.OverlapSphere(this.transform.position, depthOfSight,
+				1 << LayerMask.NameToLayer("perception")); // usa mascaras, con el << agregas con BITWISE-OR
+		List<GameObject> aux = new List<GameObject>();
 		
     	foreach (Collider hit in colliders) {		
-			if (hit.GetComponent<Entity>().type == type)
-				aux.Add(hit);
+			if (hit.tag == type)
+				aux.Add(hit.gameObject);
     	}
+		if (aux.Count > 0)
+			Debug.Log(aux.Count);
 		return aux;
 	}
 	
-	List<GridNode> perceptNodes(){
+	public moveToNode(int node){
+		
+	}
+	
+	private List<GridNode> perceptNodes(){
 		GridGraph graph = AstarPath.active.astarData.gridGraph;
 		GridNode  node  = AstarPath.active.GetNearest(transform.position).node as GridNode;
 		Node[]    nodes = graph.nodes;
@@ -124,14 +131,6 @@ public class Agent : Entity {
 				}
 			}
 		}
-		
-		// TEST ONLY
-		
-//		for(int i = 0; i < connections.Count; i++){
-//			Debug.DrawLine(transform.position, (Vector3)((Node) connections[i]).position,Color.red);
-//		}
-		// TEST ONLY
-		
 		return connections;		
 	}
 	
@@ -140,6 +139,9 @@ public class Agent : Entity {
 		return (new Int3(transform.position) -
 				node.position).worldMagnitude < depthOfSight * nodeSize;
 	}
+	
+	
+
 }
 
 //Breadth first nodes
