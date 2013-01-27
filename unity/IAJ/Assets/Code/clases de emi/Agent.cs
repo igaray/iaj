@@ -12,6 +12,8 @@ public class Agent : Entity {
 	public int life;
 	public int depthOfSight;
 	private float nodeSize; //
+	public int velocity = 5;
+	public int proximityRange = 1;
 	
 	public List<EObject> backpack = new List<EObject>();
 	
@@ -88,7 +90,7 @@ public class Agent : Entity {
 		return aux;
 	}
 	
-	public moveToNode(int node){
+	public void moveToNode(int node){
 		
 	}
 	
@@ -138,6 +140,20 @@ public class Agent : Entity {
 	private bool isVisibleNode(Node node){
 		return (new Int3(transform.position) -
 				node.position).worldMagnitude < depthOfSight * nodeSize;
+	}
+	
+	private void move() {
+	
+		transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * 8); 		
+		if( !Cerca())
+			transform.Translate(Vector3.forward * Time.deltaTime * velocity);
+		
+	}
+	
+	
+	private bool Cerca(){
+		int distance = Vector3.Distance(target, transform.position);
+		return (distance < proximityRange);
 	}
 	
 	
