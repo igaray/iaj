@@ -5,6 +5,7 @@ public abstract class Entity : MonoBehaviour {
 
 	public string description;
 	public string type;
+	public Engine engine;
 	
 	// El nombre de la entidad debe ser único entre todas las entidades
 	public string entityName; 
@@ -13,14 +14,6 @@ public abstract class Entity : MonoBehaviour {
 	//public Vector3 position; //no need for position, since monobehaviour has transform
 	
 	//static public string[] tipo_de_entidad = {"agent", "gold", "inn", "potion"};
-	
-	public Entity(string description, string type, string name, bool moveable)
-	{
-		this.description = description;
-//		this.moveable    = moveable;
-		this.entityName  = name;
-		this.type        = type;
-	}
 	
 	public virtual Hashtable perception(){
 		Hashtable p = new Hashtable();

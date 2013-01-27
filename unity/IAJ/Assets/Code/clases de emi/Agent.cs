@@ -6,30 +6,79 @@ using Pathfinding.Nodes;
 using Pathfinding;
 
 public class Agent : Entity {
-
-	private int lifeTotal = 100;
-	// private int vida_min = 0;
-	public int life;
-	public int depthOfSight;
-	private float nodeSize; //
-	public int velocity = 5;
-	public int proximityRange = 1;
 	
-	public List<EObject> backpack = new List<EObject>();
+//	public static Object prefab = Resources.Load("Prefabs/Capsule");
 	
-	public Agent(string description, string name) 
-		: base(description, "agent", name, false){
+	private int   lifeTotal = 100;
+	private float nodeSize; 		// size of the node in the world measure
+	private float delta;   			// time between ticks of "simulation"
+	public  int   life;
+	public  int   depthOfSight;
+	public  int   velocity = 5;
+	public  int   proximityRange = 1;
+	public  List<EObject> backpack = new List<EObject>();
+	
+	private Vector3    target = new Vector3(12, 0, 18);
+	private bool       moving = false;
+	private Quaternion rotation;
+	
+	public static Agent Create(	Object prefab, 
+								Vector3 position, 
+								Engine engine,
+								string description, 
+								string name, 
+								int lifeTotal) 
+	{
+		GameObject gameObj = Instantiate(prefab, position, Quaternion.identity) as GameObject;
+		Agent      agent   = gameObj.GetComponent<Agent>();
 		
-		this.life     = lifeTotal;
-		//this.nodeSize = AstarPath.active.astarData.gridGraph.nodeSize;
-		this.nodeSize = 2; //hardcodeado. Traté de hacerlo andar dinámicamente, pero no pude.
+		agent.life         = lifeTotal;
+		agent.description  = description;
+		agent.name         = name;
+		agent.engine	   = engine;
+		
+		agent.nodeSize     = 2; //hardcodeado. Traté de hacerlo andar dinámicamente, pero no pude.
 						   //Es el mismo número que el node size definido en el objeto A*, por IDE	
+		return agent;
 	}
 	
-	void Update(){
+	void Start(){
+		this.delta = engine.delta;
+		InvokeRepeating("execute", 0, delta);
+	}
+	
+	void FixedUpdate(){
 		
+		if (moving) move(); //qué buen código Cristo!			
+	}
+
+	
+	void execute(){		
 		//this.perceptNodes();
-		perceptObjects("gold");
+		//this.perceptObjects("gold");
+		this.alignWithTarget();
+	}
+	
+	void move(){
+		transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * 8); 
+		if(!near()){
+			transform.Translate(Vector3.forward * Time.deltaTime * velocity);
+		}
+		else
+			moving = false;
+	}
+	
+	private bool near(){
+		float distance = Vector3.Distance(target, transform.position);
+		return (distance < proximityRange);
+	}
+		
+	void alignWithTarget(){ 
+		Vector3 relativePos;
+		if (moving){
+			relativePos = target - transform.position;
+			rotation = Quaternion.LookRotation(relativePos, Vector3.up);
+		}
 	}
 	
 	public void subLife(int dif) {
@@ -142,19 +191,6 @@ public class Agent : Entity {
 				node.position).worldMagnitude < depthOfSight * nodeSize;
 	}
 	
-	private void move() {
-	
-		transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * 8); 		
-		if( !Cerca())
-			transform.Translate(Vector3.forward * Time.deltaTime * velocity);
-		
-	}
-	
-	
-	private bool Cerca(){
-		int distance = Vector3.Distance(target, transform.position);
-		return (distance < proximityRange);
-	}
 	
 	
 
