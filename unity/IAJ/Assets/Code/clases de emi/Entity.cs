@@ -14,14 +14,6 @@ public abstract class Entity : MonoBehaviour {
 	
 	//static public string[] tipo_de_entidad = {"agent", "gold", "inn", "potion"};
 	
-	public Entity(string description, string type, string name, bool moveable)
-	{
-		this.description = description;
-//		this.moveable    = moveable;
-		this.entityName  = name;
-		this.type        = type;
-	}
-	
 	public virtual Hashtable perception(){
 		Hashtable p = new Hashtable();
 		

@@ -6,22 +6,32 @@ using Pathfinding.Nodes;
 using Pathfinding;
 
 public class Agent : Entity {
-
-	private int lifeTotal = 100;
-	// private int vida_min = 0;
-	public int life;
-	public int depthOfSight;
+	
+//	public static Object prefab = Resources.Load("Prefabs/Capsule");
+	
+	private int   lifeTotal = 100;
 	private float nodeSize; //
+	public  int   life;
+	public  int   depthOfSight;
 	
 	public List<EObject> backpack = new List<EObject>();
 	
-	public Agent(string description, string name) 
-		: base(description, "agent", name, false){
+	public static Agent Create(	Object prefab, 
+								Vector3 position, 
+								string description, 
+								string name, 
+								int lifeTotal) 
+	{
+		GameObject gameObj = Instantiate(prefab, position, Quaternion.identity) as GameObject;
+		Agent      agent   = gameObj.GetComponent<Agent>();
 		
-		this.life     = lifeTotal;
-		//this.nodeSize = AstarPath.active.astarData.gridGraph.nodeSize;
-		this.nodeSize = 2; //hardcodeado. Traté de hacerlo andar dinámicamente, pero no pude.
+		agent.life         = lifeTotal;
+		agent.description  = description;
+		agent.name         = name;
+		
+		agent.nodeSize     = 2; //hardcodeado. Traté de hacerlo andar dinámicamente, pero no pude.
 						   //Es el mismo número que el node size definido en el objeto A*, por IDE	
+		return agent;
 	}
 	
 	void Update(){
@@ -88,7 +98,7 @@ public class Agent : Entity {
 		return aux;
 	}
 	
-	public moveToNode(int node){
+	public void moveToNode(int node){
 		
 	}
 	
