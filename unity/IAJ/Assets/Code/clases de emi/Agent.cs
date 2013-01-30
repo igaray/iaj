@@ -5,22 +5,28 @@ using System.Collections.Generic;
 using Pathfinding.Nodes;
 using Pathfinding;
 
+[RequireComponent (typeof (RigidBodyController))]
+
 public class Agent : Entity {
 	
 //	public static Object prefab = Resources.Load("Prefabs/Capsule");
 	
 	private int   lifeTotal = 100;
-	private float nodeSize; 		// size of the node in the world measure
-	private float delta;   			// time between ticks of "simulation"
+	private float _nodeSize; 		// size of the node in the world measure
+	private float _delta;   			// time between ticks of "simulation"
 	public  int   life;
-	public  int   depthOfSight;
+	public  int   _depthOfSight;
 	public  int   velocity = 5;
-	public  int   proximityRange = 1;
+	
 	public  List<EObject> backpack = new List<EObject>();
 	
-	private Vector3    target = new Vector3(12, 0, 18);
-	private bool       moving = false;
-	private Quaternion rotation;
+//	private Vector3 target = new Vector3(12, 0, 18);
+//	private bool    moving = false;
+//	private Vector3 velocityVector;
+	
+	private RigidBodyController _controller;
+	private Engine _engine; 
+	private List<GridNode> nodeList;
 	
 	public static Agent Create(	Object prefab, 
 								Vector3 position, 
@@ -35,50 +41,26 @@ public class Agent : Entity {
 		agent.life         = lifeTotal;
 		agent.description  = description;
 		agent.name         = name;
-		agent.engine	   = engine;
-		
-		agent.nodeSize     = 2; //hardcodeado. Traté de hacerlo andar dinámicamente, pero no pude.
-						   //Es el mismo número que el node size definido en el objeto A*, por IDE	
+		agent._engine	   = engine;		
+		agent._nodeSize     = 2; //hardcodeado. Traté de hacerlo andar dinámicamente, pero no pude.
+						  		 //Es el mismo número que el node size definido en el objeto A*, por IDE	
 		return agent;
 	}
 	
 	void Start(){
-		this.delta = engine.delta;
-		InvokeRepeating("execute", 0, delta);
-	}
-	
-	void FixedUpdate(){
+		this._delta      = _engine.delta;
+		this._controller = this.GetComponent<RigidBodyController>();
 		
-		if (moving) move(); //qué buen código Cristo!			
+		InvokeRepeating("execute", 0, _delta);
 	}
-
 	
+	// esto se ejecuta en cada ciclo de 
 	void execute(){		
-		//this.perceptNodes();
-		//this.perceptObjects("gold");
-		this.alignWithTarget();
-	}
-	
-	void move(){
-		transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * 8); 
-		if(!near()){
-			transform.Translate(Vector3.forward * Time.deltaTime * velocity);
-		}
-		else
-			moving = false;
-	}
-	
-	private bool near(){
-		float distance = Vector3.Distance(target, transform.position);
-		return (distance < proximityRange);
-	}
+		nodeList = this.perceptNodes();
 		
-	void alignWithTarget(){ 
-		Vector3 relativePos;
-		if (moving){
-			relativePos = target - transform.position;
-			rotation = Quaternion.LookRotation(relativePos, Vector3.up);
-		}
+		List<Agent> agents = this.perceptObjects<Agent>("agent");
+		if (!_controller.moving && nodeList.Count > 1)
+			_controller.move((Vector3)(nodeList[Random.Range(0, nodeList.Count)].position));		
 	}
 	
 	public void subLife(int dif) {
@@ -117,29 +99,30 @@ public class Agent : Entity {
 		p["lifeTotal"] = lifeTotal;
 		p["backpack"]  = backpack;
 		
-		p["agentsSeen"] = perceptObjects("agent");
-		p["goldSeen"]   = perceptObjects("gold");
-		//TODO:
-		// - cast spherecast
+		p["agentsSeen"] = perceptObjects<Agent>("agent");
+		p["goldSeen"]   = perceptObjects<Gold>("gold");
+
 		return p;
 	}
 	
-	private List<GameObject> perceptObjects(string type){
+	private List<T> perceptObjects<T>(string type) where T : Component{ // cuánta magia
+																		// acá restrinjo el tipo pasado por 
+																		// parámetro
 		Collider[] colliders = 
-			Physics.OverlapSphere(this.transform.position, depthOfSight,
+			Physics.OverlapSphere(this.transform.position, _depthOfSight,
 				1 << LayerMask.NameToLayer("perception")); // usa mascaras, con el << agregas con BITWISE-OR
-		List<GameObject> aux = new List<GameObject>();
+		List<T> aux = new List<T>();
 		
     	foreach (Collider hit in colliders) {		
 			if (hit.tag == type)
-				aux.Add(hit.gameObject);
+				aux.Add(hit.gameObject.GetComponent<T>());
     	}
 		if (aux.Count > 0)
 			Debug.Log(aux.Count);
 		return aux;
 	}
 	
-	public void moveToNode(int node){
+	public void moveToNode(Vector3 target){
 		
 	}
 	
@@ -151,8 +134,8 @@ public class Agent : Entity {
 		
 		int[] neighbourOffsets = graph.neighbourOffsets;
 		
-		List<GridNode>    connections = new List<GridNode>();
-		Queue<BFNode>     q           = new Queue<BFNode>();
+		List   <GridNode> connections = new List   <GridNode>();
+		Queue  <BFNode>   q           = new Queue  <BFNode>  ();
 		HashSet<GridNode> visited     = new HashSet<GridNode>();
 				
 		//BFS
@@ -163,20 +146,18 @@ public class Agent : Entity {
 		while (q.Count > 0){
 			t = q.Dequeue();
 			connections.Add(t.node);
-			if (t.depth < depthOfSight){ //si no está en el límite, agrego nodos
+			if (t.depth < _depthOfSight){ //si no está en el límite, agrego nodos
 				for (int i = 0; i < 8; i++){ //las 8 conexiones posibles de cada nodo
 					index = t.node.GetIndex();
 
 					if(t.node.GetConnection(i)){
 						aux = nodes[index + neighbourOffsets[i]];
-
 						if (!(visited.Contains((GridNode)(aux))) && //famoso if de reglón de ancho, warpeado
 							isVisibleNode(aux) &&
 							aux.walkable)
 						{	
 							visited.Add((GridNode)aux);
 							q.Enqueue(new BFNode(t.depth + 1, (GridNode)aux));
-						
 						}
 					}
 				}
@@ -188,12 +169,8 @@ public class Agent : Entity {
 	//check if the node is in a visible distance
 	private bool isVisibleNode(Node node){
 		return (new Int3(transform.position) -
-				node.position).worldMagnitude < depthOfSight * nodeSize;
+				node.position).worldMagnitude < _depthOfSight * _nodeSize;
 	}
-	
-	
-	
-
 }
 
 //Breadth first nodes
