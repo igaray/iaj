@@ -42,13 +42,24 @@ public class Action {
 public class Percept {
 	
 	public Percept() {
-		// TODO
+		// TODO LEO
 	}
 	
-	public String toXML() {
-		// TODO
-		return "";
+	public String toProlog() {
+		// TODO AKI
+		return ""; 
 	}
+}
+
+public class PerceptRequest {
+	
+	public int agentID;
+	public PerceptQueue percepts;
+	
+	public PerceptRequest(int AID, PerceptQueue percepts) {
+		this.agentID  = AID;
+		this.percepts = percepts;
+	}	
 }
 
 public class ActionQueue {
@@ -199,6 +210,42 @@ public class StringQueue {
 	}
 }
 
+public class RequestQueue {
+    
+    private Queue queue;
+    private Mutex mutex;
+    
+    public RequestQueue() {
+        queue = new Queue();
+        mutex = new Mutex(false);
+    }
+    
+    public void Enqueue(PerceptRequest req) {
+        mutex.WaitOne();
+        queue.Enqueue(req);
+        mutex.ReleaseMutex();
+    }
+    
+    public bool Dequeue(out PerceptRequest req) {
+		bool result = false;
+		req = null;
+        mutex.WaitOne();
+        if (queue.Count > 0) {
+            req = (PerceptRequest)queue.Dequeue();
+			result = true;
+        }
+        mutex.ReleaseMutex();
+        return result;
+    }
+	
+	public bool isEmpty() {
+		return (queue.Count == 0);
+	}
+	
+	public bool notEmpty() {
+		return (queue.Count > 0);
+	}
+}
 
 
 /******************************************************************************/
@@ -381,40 +428,49 @@ public class SimulationEngineScript : MonoBehaviour {
 	
     private string outputText = "";
     private StringQueue outputQueue;
-
-//    private ThreadTest oThreadTest1;
-//    private ThreadTest oThreadTest2;
-//
-//    private NetworkTest oNetworkTest;
-	
-//    private Thread oThread1;
-//    private Thread oThread2;
-//    private Thread oThread3;
+	private RequestQueue perceptRequests;
 
     // Use this for initialization
     void Start () {
 		
+		perceptRequests = new RequestQueue();
         outputQueue = new StringQueue();
         outputQueue.Enqueue("Loading... ");
 
-//		oThreadTest1 = new ThreadTest("thread1", outputQueue);
-//		oThread1 = new Thread(new ThreadStart(oThreadTest1.run));
-//		oThread1.Start();
-
-//		oThreadTest2 = new ThreadTest("thread2", outputQueue);
-//		oThread2 = new Thread(new ThreadStart(oThreadTest2.run));
-//		oThread2.Start();
-
-//		oNetworkTest = new NetworkTest("network", outputQueue);
-//		oThread3 = new Thread(new ThreadStart(oNetworkTest.run));
-//		oThread3.Start();
-		
         outputQueue.Enqueue("done.\n");
 		print("ok");
+		
+		InvokeRepeating("GeneratePercepts", 0.0f, 0.1f);
+		InvokeRepeating("HandleActions",    0.0f, 0.1f);
     }
     
-    // Update is called once per frame
-    void Update () {
+	// TODO LEO
+	void makePercept(int AgentID, PerceptQueue percepts) {
+		
+	}
+	
+	void GeneratePercepts () {
+		
+		PerceptRequest request;
+		
+		// for every percept request object in the percept request mailbox, 
+		while (perceptRequests.notEmpty()) {
+			
+			// get the percept request object
+			perceptRequests.Dequeue(out request);
+
+			// genereate the percept
+			// TODO LEO: implementar esto
+			makePercept(request.agentID, request.percepts);
+	
+			Percept percept = new Percept( /* ACA VA LA MAGIA LEOOOOO*/ );
+			
+			// insert the perept in the agent percept mailbox}
+			request.percepts.Enqueue(percept);
+		}
+	}
+	
+	void HandleActions () {
 		string str;
 
 		// Get all the text out of the queue.
@@ -424,8 +480,12 @@ public class SimulationEngineScript : MonoBehaviour {
 			}
 		}
 		frame++;
+		outputQueue.Enqueue(".");
     }
-
+	
+	void Update() {
+	}
+	
     void OnGUI () {
         GUI.skin = mySkin;
 		scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUILayout.Width(256), GUILayout.Height(512));
@@ -434,8 +494,5 @@ public class SimulationEngineScript : MonoBehaviour {
     }
 
 	void OnApplicationQuit() {
-//		oThread1.Abort();
-//		oThread2.Abort();
-//		oThread3.Abort();
 	}
 }
