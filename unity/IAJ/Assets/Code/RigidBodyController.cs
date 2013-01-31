@@ -13,11 +13,9 @@ public class RigidBodyController : MonoBehaviour {
 	public float gravity = 9.81f;
 	public float maxVelocityChange = 10.0f;
 	public  int   _proximityRange = 1;
-	//public bool canJump = true;
-	//public float jumpHeight = 2.0f;
 	private bool grounded = false;
  
-	private Vector3 target = new Vector3(12, 0, 18);
+	public Vector3  target;
 	public  bool    moving = false;
 	private Vector3 velocityVector;
 	

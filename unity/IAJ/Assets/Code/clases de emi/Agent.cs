@@ -11,7 +11,7 @@ public class Agent : Entity {
 	
 //	public static Object prefab = Resources.Load("Prefabs/Capsule");
 	
-	private int   lifeTotal = 100;
+	public  int   lifeTotal = 100;
 	private float _nodeSize; 		// size of the node in the world measure
 	private float _delta;   			// time between ticks of "simulation"
 	public  int   life;
@@ -54,13 +54,26 @@ public class Agent : Entity {
 		InvokeRepeating("execute", 0, _delta);
 	}
 	
-	// esto se ejecuta en cada ciclo de 
+	// esto se ejecuta en cada ciclo de "simulación"
 	void execute(){		
 		nodeList = this.perceptNodes();
 		
 		List<Agent> agents = this.perceptObjects<Agent>("agent");
+		
+		// TEST
 		if (!_controller.moving && nodeList.Count > 1)
-			_controller.move((Vector3)(nodeList[Random.Range(0, nodeList.Count)].position));		
+			_controller.move((Vector3)(nodeList[Random.Range(0, nodeList.Count)].position));	
+		// TEST
+		
+	}
+	
+		
+	public void moveToNode(int node){
+		_controller.move((Vector3)(nodeList[node].position));	
+	}
+	
+	public void moveToNode(Vector3 target){
+		_controller.move(target);	
 	}
 	
 	public void subLife(int dif) {
@@ -88,43 +101,40 @@ public class Agent : Entity {
 	}
 	
 	public void drop(EObject obj) {
-		//TODO: 
-		// - add object to the game
+
 		this.backpack.Remove(obj);
 	}
 	
 	public override Hashtable perception(){
 		Hashtable p = base.perception();
-		p["life"]      = life;
-		p["lifeTotal"] = lifeTotal;
-		p["backpack"]  = backpack;
-		
+		p["life"]       = life;
+		p["lifeTotal"]  = lifeTotal;
+		p["backpack"]   = backpack;		
 		p["agentsSeen"] = perceptObjects<Agent>("agent");
-		p["goldSeen"]   = perceptObjects<Gold>("gold");
+		p["goldSeen"]   = perceptObjects<Gold> ("gold");
 
 		return p;
 	}
 	
-	private List<T> perceptObjects<T>(string type) where T : Component{ // cuánta magia
-																		// acá restrinjo el tipo pasado por 
-																		// parámetro
+	private List<ObjectType> perceptObjects<ObjectType>(string type, string layer = "perception") 
+		where ObjectType : Component // cuánta magia
+									// acá restrinjo el tipo pasado por 
+									// parámetro
+		{
 		Collider[] colliders = 
 			Physics.OverlapSphere(this.transform.position, _depthOfSight,
-				1 << LayerMask.NameToLayer("perception")); // usa mascaras, con el << agregas con BITWISE-OR
-		List<T> aux = new List<T>();
+				1 << LayerMask.NameToLayer(layer)); // usa mascaras, con el << agregas con BITWISE-OR
+		List<ObjectType> aux = new List<ObjectType>();
 		
     	foreach (Collider hit in colliders) {		
 			if (hit.tag == type)
-				aux.Add(hit.gameObject.GetComponent<T>());
+				aux.Add(hit.gameObject.GetComponent<ObjectType>());
     	}
-		if (aux.Count > 0)
-			Debug.Log(aux.Count);
+//		if (aux.Count > 0)
+//			Debug.Log(aux.Count);
 		return aux;
 	}
-	
-	public void moveToNode(Vector3 target){
-		
-	}
+
 	
 	private List<GridNode> perceptNodes(){
 		GridGraph graph = AstarPath.active.astarData.gridGraph;
