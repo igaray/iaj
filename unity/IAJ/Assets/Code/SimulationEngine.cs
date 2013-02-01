@@ -124,7 +124,7 @@ public class Percept {
 
 public class PerceptRequest {
 
-    public int AgentID;
+    public int agentID;
     public MailBox<Percept> agentPerceptMailbox;
 
     public PerceptRequest(int AID, MailBox<Percept> AP) {
@@ -247,7 +247,7 @@ public class AgentState {
         this.lastActionResult = ActionResult.success;
         this.actions          = ss.readyActionQueue;
         this.results          = new MailBox<ActionResult>();
-        this.percepts         = new MailBox<Percepts>();
+        this.percepts         = new MailBox<Percept>();
     }
 
     public void move(Position vector) {
@@ -280,7 +280,7 @@ public class SimulationState {
         agents           = new Dictionary<int, AgentState>();
         objects          = new Dictionary<int, ObjectState>();
         readyActionQueue = new MailBox<Action>();
-        perceptRequests  = new MailBox<PercepRequest>();
+        perceptRequests  = new MailBox<PerceptRequest>();
 
         XmlDocument document = new XmlDocument();
         document.Load(new StreamReader("config.xml"));
@@ -587,8 +587,8 @@ public class AgentConnection {
         
         while (!quit) {
             try {
-                perceptRequests.send(new PerceptRequest(agentID, percepts));    // send a percept request to unity
-                percept = percepts.Recv();                                      // block until I receive percept from unity
+                perceptRequests.Send(new PerceptRequest(agentID, percepts));    // send a percept request to unity
+                percepts.Recv(out percept);                                     // block until I receive percept from unity
                 sendPercept(percept);                                           // send percept to agent
 
                 receiveAction(out action);                                      // receive action from agent
