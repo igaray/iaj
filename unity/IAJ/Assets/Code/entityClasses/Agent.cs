@@ -18,10 +18,12 @@ public class Agent : Entity {
 										// Es el mismo número que el node size definido en el objeto A*, por IDE
 	private float _delta;   			// time between ticks of "simulation"
 	public  int   life;
-	public  int   _depthOfSight;
+	public  int   _depthOfSight;		// radius of vision, in nodes
+	public  float _reach   = 1;			// radius of reach (of objects), in world magnitude
 	public  int   velocity = 5;
 	
 	public  List<EObject> backpack = new List<EObject>();
+	public  List<EObject> dropped  = new List<EObject>(); // TEST: TODO: Borrar
 	
 //	private Vector3 target = new Vector3(12, 0, 18);
 //	private bool    moving = false;
@@ -44,7 +46,8 @@ public class Agent : Entity {
 		agent.life         = lifeTotal;
 		agent.description  = description;
 		agent.name         = name;
-		agent._engine	   = engine;		
+		agent._engine	   = engine;	
+		
 
 						  			
 		return agent;
@@ -61,9 +64,20 @@ public class Agent : Entity {
 	void execute(){		
 		nodeList = this.perceptNodes();
 		
-		List<Agent> agents = this.perceptObjects<Agent>("agent");
+		List<Agent> agents   = this.perceptObjects<Agent>("agent");
+		List<Gold>  goldList = this.perceptObjects<Gold> ("gold");
 		
 		// TEST
+		foreach(Gold gold in goldList){
+			if (!dropped.Contains(gold))
+				pickup(gold);
+		}
+		
+		if (backpack.Count > 1){
+			drop(backpack[0]);
+			dropped.Add(backpack[0]);
+		}
+		
 		if (!_controller.moving && nodeList.Count > 1)
 			_controller.move((Vector3)(nodeList[Random.Range(0, nodeList.Count)].position));	
 		// TEST
@@ -97,15 +111,29 @@ public class Agent : Entity {
 	}
 	
 	public void pickup(EObject obj) {
-		//TODO: 
-		// - check the distance between agent and object
-		// - remove object from the game
-		this.backpack.Add(obj);
+		
+		if (isReachableObject(obj)){
+			obj.gameObject.SetActive(false);
+			this.backpack.Add(obj);
+		}
+		else{
+			// TODO: excepcion? devolver falso? guardarlo en algun lado?
+		}
 	}
 	
 	public void drop(EObject obj) {
-
-		this.backpack.Remove(obj);
+		
+		if (backpack.Contains(obj)){
+			Vector3 newPosition = this.transform.position;
+			this.backpack.Remove(obj);
+			obj.gameObject.SetActive(true);
+			newPosition.y += 2.5f;
+			obj.transform.position = newPosition;
+			obj.rigidbody.AddForce(new Vector3(20,20,20)); //TODO: cambiar esta fruta
+		}
+		else{
+			//TODO: excepcion? devolver falso? guardarlo en algun lado?
+		}
 	}
 	
 	public override Hashtable perception(){
@@ -184,6 +212,11 @@ public class Agent : Entity {
 		
 		return (new Int3(transform.position) -
 				node.position).worldMagnitude < _depthOfSight * _nodeSize;
+	}
+	
+	private bool isReachableObject(EObject obj){
+		
+		return (obj.transform.position - transform.position).magnitude < _depthOfSight * _nodeSize;
 	}
 	
 	public void perceive(Percept p){

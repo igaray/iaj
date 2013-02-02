@@ -8,7 +8,7 @@ public class Engine : MonoBehaviour {
 	public Inn inn;
 	public float delta = 0.1f;
 	
-	private Agent[] agents = new Agent[6];
+	private Agent[] agents = new Agent[3];
 	
 	void Start () {
 //		Instantiate(prefab, new Vector3(20, 23, 1), Quaternion.identity);
@@ -18,9 +18,9 @@ public class Engine : MonoBehaviour {
 		agents [0] = Agent.Create(agent, new Vector3(20, 23, 1), this, "", "agent1", 100);
 		agents [1] = Agent.Create(agent, new Vector3(30, 10, 1), this, "", "agent2", 100);
 		agents [2] = Agent.Create(agent, new Vector3(10, 30, 1), this, "", "agent3", 100);
-		agents [3] = Agent.Create(agent, new Vector3(22, 2, 1),  this, "", "agent4", 100);
-		agents [4] = Agent.Create(agent, new Vector3(13, 10, 1), this, "", "agent5", 100);
-		agents [5] = Agent.Create(agent, new Vector3(14, 30, 1), this, "", "agent6", 100);
+//		agents [3] = Agent.Create(agent, new Vector3(22, 2, 1),  this, "", "agent4", 100);
+//		agents [4] = Agent.Create(agent, new Vector3(13, 10, 1), this, "", "agent5", 100);
+//		agents [5] = Agent.Create(agent, new Vector3(14, 30, 1), this, "", "agent6", 100);
 		
 		Gold.Create (gold,  new Vector3(6,  0, 15), this, "", "gold1",  2);
 		Gold.Create (gold,  new Vector3(22, 0, 4 ), this, "", "gold2",  2);
@@ -37,8 +37,11 @@ public class Engine : MonoBehaviour {
 	}
 	
 	void Update () {
-		 foreach(Agent a in agents)
-			if (inn.isInside(a.transform.position))
+		Transform p;
+		foreach(Agent a in agents){
+			p = a.transform;
+			if (inn.isInside(p.position))
 				Debug.Log(a.name + " is inside the inn");
+		}
 	}
 }
