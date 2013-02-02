@@ -36,7 +36,6 @@ public class Engine : MonoBehaviour {
 		inn = GameObject.FindWithTag ("inn").GetComponent<Inn>();
 	}
 	
-//	 Update is called once per frame
 	void Update () {
 		 foreach(Agent a in agents)
 			if (inn.isInside(a.transform.position))

@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 using Pathfinding.Nodes;
 using Pathfinding;
@@ -12,7 +13,9 @@ public class Agent : Entity {
 //	public static Object prefab = Resources.Load("Prefabs/Capsule");
 	
 	public  int   lifeTotal = 100;
-	private float _nodeSize; 		// size of the node in the world measure
+	private float _nodeSize = 2; 		// size of the node in the world measure
+										// Hardcodeado. Traté de hacerlo andar dinámicamente, pero no pude.
+										// Es el mismo número que el node size definido en el objeto A*, por IDE
 	private float _delta;   			// time between ticks of "simulation"
 	public  int   life;
 	public  int   _depthOfSight;
@@ -42,8 +45,8 @@ public class Agent : Entity {
 		agent.description  = description;
 		agent.name         = name;
 		agent._engine	   = engine;		
-		agent._nodeSize     = 2; //hardcodeado. Traté de hacerlo andar dinámicamente, pero no pude.
-						  		 //Es el mismo número que el node size definido en el objeto A*, por IDE	
+
+						  			
 		return agent;
 	}
 	
@@ -109,17 +112,17 @@ public class Agent : Entity {
 		Hashtable p = base.perception();
 		p["life"]       = life;
 		p["lifeTotal"]  = lifeTotal;
-		p["backpack"]   = backpack;		
-		p["agentsSeen"] = perceptObjects<Agent>("agent");
-		p["goldSeen"]   = perceptObjects<Gold> ("gold");
+//		p["backpack"]   = backpack;		
+//		p["agentsSeen"] = perceptObjects<Agent>("agent");
+//		p["goldSeen"]   = perceptObjects<Gold> ("gold");
 
 		return p;
 	}
 	
 	private List<ObjectType> perceptObjects<ObjectType>(string type, string layer = "perception") 
 		where ObjectType : Component // cuánta magia
-									// acá restrinjo el tipo pasado por 
-									// parámetro
+									 // acá restrinjo el tipo pasado por 
+									 // parámetro
 		{
 		Collider[] colliders = 
 			Physics.OverlapSphere(this.transform.position, _depthOfSight,
@@ -178,8 +181,16 @@ public class Agent : Entity {
 	
 	//check if the node is in a visible distance
 	private bool isVisibleNode(Node node){
+		
 		return (new Int3(transform.position) -
 				node.position).worldMagnitude < _depthOfSight * _nodeSize;
+	}
+	
+	public void perceive(Percept p){
+		
+		p.addEntities(perceptObjects<Agent>("agent").Cast<Entity>().ToList());
+		p.addEntities(perceptObjects<Gold> ("gold") .Cast<Entity>().ToList());
+		p.addNodes(perceptNodes());
 	}
 }
 

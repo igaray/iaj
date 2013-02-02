@@ -1,66 +1,118 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using System;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using Pathfinding;
+using Pathfinding.Nodes;
 
 /******************************************************************************/
-public enum ActionType {unknown, noop, move, attack, parry};
+//public enum ActionType {unknown, noop, move, attack, parry};
+//
+//public enum ActionResult {success, failure};
 
-public enum ActionResult {success, failure};
+//public class AgentState {
+//	
+//	private Vector3 position;
+//	private String name;
+//	private ActionResult lastActionResult;
+//}
 
-public class AgentState {
-	
-	private Vector3 position;
-	private String name;
-	private ActionResult lastActionResult;
-}
+//public class ObjectState {
+//	
+//	private Vector3 position;
+//	private String name;
+//}
 
-public class ObjectState {
-	
-	private Vector3 position;
-	private String name;
-}
-
-public class Action {
-	
-	private ActionType type;
-	
-	public Action(ActionType type) {
-		this.type = type;
-	}
-	
-	public Action fromXML(string xml) {
-		// TODO
-		return null;
-	}
-}
+//public class Action {
+//	
+//	private ActionType type;
+//	
+//	public Action(ActionType type) {
+//		this.type = type;
+//	}
+//	
+//	public Action fromXML(string xml) {
+//		// TODO
+//		return null;
+//	}
+//}
+//
 
 public class Percept {
 	
-	public Percept() {
-		// TODO LEO
+	public List<PerceptElement> elements = new List<PerceptElement>();
+	
+	// the perception is created and generated here
+	public Percept(SimulationState state, int agentID) {
+		state.agents[agentID].agentController.perceive(this); 
 	}
 	
-	public String toProlog() {
-		// TODO AKI
-		return ""; 
+	public string toProlog() {
+		
+		string aux = "";
+		Hashtable dic;
+		
+		foreach (PerceptElement e in elements){
+			switch(e.elementType)
+			{
+				case 0: 											// Entity
+					dic = e.entity.perception();
+					foreach(DictionaryEntry entry in dic){
+						Debug.Log(entry.Key + ": " + entry.Value);
+					}
+					break;
+				case 1:												// List of entities
+					foreach(Entity entity in e.entities){
+						dic = entity.perception();
+						foreach(DictionaryEntry entry in dic){
+							Debug.Log(entry.Key + ": " + entry.Value);
+						}
+					}
+					break;
+				case 2:												// List of nodes
+					foreach(GridNode node in e.nodes){
+						//TODO generar alguna manera de pasaar a texto los nodos
+						node.ContainsConnection(node);
+					}
+					break;
+			}
+		}
+		return aux; 
 	}
+	
+	// posiblemente innecesario
+	public void add(Entity e){
+		elements.Add(new PerceptElement(e));
+	}
+	
+	public void addEntities(List<Entity> e){
+		elements.Add((new PerceptElement()).addEntities(e));
+	}
+	
+	public void addNodes(List<GridNode> e){
+		elements.Add((new PerceptElement()).addNodes(e));
+	}
+//	
+//	public void add(List<GridNode> e){
+//		elements.Add(new PerceptElement(e));
+//	}
 }
 
-public class PerceptRequest {
-	
-	public int agentID;
-	public PerceptQueue percepts;
-	
-	public PerceptRequest(int AID, PerceptQueue percepts) {
-		this.agentID  = AID;
-		this.percepts = percepts;
-	}	
-}
+//public class PerceptRequest {
+//	
+//	public int agentID;
+//	public PerceptQueue percepts;
+//	
+//	public PerceptRequest(int AID, PerceptQueue percepts) {
+//		this.agentID  = AID;
+//		this.percepts = percepts;
+//	}	
+//}
 
 public class ActionQueue {
 	
@@ -249,93 +301,93 @@ public class RequestQueue {
 
 
 /******************************************************************************/
-public class ConnectionHandler {
-
-    private bool quit;
-    private AgentConnection[] agentConnections;
-
-    public ConnectionHandler() {
-        // initialize everything
-    }
-
-    public void run() {
-        while (!quit) {
-            /*
-            listen on serverSocket
-            on accept
-                spawn agentAvatar 
-                add it to agentAvatars
-                tell it to run()
-            */
-        }
-    }
-}
-
-public class AgentConnection {
-
-	private Socket socket;
-	private NetworkStream ns;
-	private StreamReader  sr;
-	private StreamWriter  sw;
-
-	public int id;
-	public ActionQueue actionQueue;
-	public ResultQueue resultQueue;
-	public PerceptQueue perceptQueue;
-	
-	public void start(Socket socket, ActionQueue globalActionQueue) {
-		// initialize everything
-		actionQueue  = globalActionQueue;
-		resultQueue  = new ResultQueue();
-		perceptQueue = new PerceptQueue();
-	}
-
-	public void run() {
-        /*
-        prepare percept
-        send percept
-        receive action
-        enqueue action in actionQueue
-        deque action result
-        send action result
-        */
-	}
-}
+//public class ConnectionHandler {
+//
+//    private bool quit;
+//    private AgentConnection[] agentConnections;
+//
+//    public ConnectionHandler() {
+//        // initialize everything
+//    }
+//
+//    public void run() {
+//        while (!quit) {
+//            /*
+//            listen on serverSocket
+//            on accept
+//                spawn agentAvatar 
+//                add it to agentAvatars
+//                tell it to run()
+//            */
+//        }
+//    }
+//}
+//
+//public class AgentConnection {
+//
+//	private Socket socket;
+//	private NetworkStream ns;
+//	private StreamReader  sr;
+//	private StreamWriter  sw;
+//
+//	public int id;
+//	public ActionQueue actionQueue;
+//	public ResultQueue resultQueue;
+//	public PerceptQueue perceptQueue;
+//	
+//	public void start(Socket socket, ActionQueue globalActionQueue) {
+//		// initialize everything
+//		actionQueue  = globalActionQueue;
+//		resultQueue  = new ResultQueue();
+//		perceptQueue = new PerceptQueue();
+//	}
+//
+//	public void run() {
+//        /*
+//        prepare percept
+//        send percept
+//        receive action
+//        enqueue action in actionQueue
+//        deque action result
+//        send action result
+//        */
+//	}
+//}
 
 
 
 /******************************************************************************/
-public class SimulationEngine {
-    
-    private ConnectionHandler connectionHandler;
-    private ActionHandler actionHandler;
-
-    public SimulationEngine() {
-        // start the action handler
-        // start the connection handler
-    }
-}
-
-public class ActionHandler  {
-    
-    private bool        quit = false;
-    private ActionQueue actionQueue;
-    private AgentState  agents;
-    private ObjectState objects;
-
-    public void start() {
-        // initialize everything
-    }
-
-    public void run() {
-        while (!quit) {
-            /*
-            get action from actionQueue
-            apply action effects to world state
-            */
-        }
-    }   
-}
+//public class SimulationEngine {
+//    
+//    private ConnectionHandler connectionHandler;
+//    private ActionHandler actionHandler;
+//
+//    public SimulationEngine() {
+//        // start the action handler
+//        // start the connection handler
+//    }
+//}
+//
+//public class ActionHandler  {
+//    
+//    private bool        quit = false;
+//    private ActionQueue actionQueue;
+//    private AgentState  agents;
+//    private ObjectState objects;
+//
+//    public void start() {
+//        // initialize everything
+//    }
+//
+//    public void run() {
+//        while (!quit) {
+//            /*
+//            get action from actionQueue
+//            apply action effects to world state
+//            */
+//        }
+//    }   
+//}
 
 
 
@@ -360,7 +412,6 @@ public class ThreadTest {
         }
    }
 }
-
 public class NetworkTest {
     
     private string name;
@@ -374,11 +425,13 @@ public class NetworkTest {
     }
 
     public void run() {
+
 //        while (true) {
 //            i++;
 //			sq.Enqueue(name.ToString() + " " + i.ToString() + "\n");
 //			Thread.Sleep(1000);
 //        }
+
 		TcpListener serverSocket = new TcpListener(IPAddress.Parse("127.0.0.1"), 8888);
 		sq.Enqueue(">> server socket create\n");
 		TcpClient clientSocket = default(TcpClient);
@@ -404,7 +457,7 @@ public class NetworkTest {
 		
 //		NetworkStream networkStream = clientSocket.GetStream();
 //		byte[] bytesFrom = new byte[100];
-//		networkStream.Read(bytesFrom, 0, (int)clientSocket.ReceiveBufferSize);
+//		networkStream.ReadbytesFrom, 0, (int)clientSocket.ReceiveBufferSize);
 //		sq.Enqueue(">> read\n");
 //		string dataFromClient = System.Text.Encoding.UTF8.GetString(bytesFrom);
 //		sq.Enqueue(">> data: " + dataFromClient + "\n");
@@ -429,6 +482,8 @@ public class SimulationEngineScript : MonoBehaviour {
     private string outputText = "";
     private StringQueue outputQueue;
 	private RequestQueue perceptRequests;
+	
+	public SimulationState state; 
 
     // Use this for initialization
     void Start () {
@@ -445,9 +500,9 @@ public class SimulationEngineScript : MonoBehaviour {
     }
     
 	// TODO LEO
-	void makePercept(int AgentID, PerceptQueue percepts) {
-		
-	}
+//	void makePercept(int agentID, MailBox<Percept> percepts) {
+//		
+//	}
 	
 	void GeneratePercepts () {
 		
@@ -461,12 +516,12 @@ public class SimulationEngineScript : MonoBehaviour {
 
 			// genereate the percept
 			// TODO LEO: implementar esto
-			makePercept(request.agentID, request.percepts);
+			//makePercept(request.agentID, request.agentPerceptMailbox);
 	
-			Percept percept = new Percept( /* ACA VA LA MAGIA LEOOOOO*/ );
+			Percept percept = new Percept(state, request.agentID);
 			
-			// insert the perept in the agent percept mailbox}
-			request.percepts.Enqueue(percept);
+			// insert the percept in the agent percept mailbox}
+			request.agentPerceptMailbox.Send(percept);
 		}
 	}
 	
