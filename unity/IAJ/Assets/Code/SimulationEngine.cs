@@ -86,6 +86,14 @@ public class MailBox<T> {
         }
         return result;
     }
+
+    public bool isEmpty() {
+        return (queue.Count == 0);
+    }
+    
+    public bool notEmpty() {
+        return (queue.Count > 0);
+    }
 }
 
 /******************************************************************************/
@@ -164,7 +172,6 @@ public class Action {
 
     public Action(SimulationState ss, int aid, string xml) {
 
-
         // It might be the case that the string passed in null or 
         // empty, in which case a default action of type noop is made.
         if ((xml == null) || (xml == "")) {
@@ -209,7 +216,7 @@ public class Action {
             }
             catch (System.Xml.XmlException) {
                 // TODO somehow signal failure to agent
-                Debug.Log(String.Format("AC {0}: Error: bad action xml.", agentID));
+                ss.stdout.Send(String.Format("AC {0}: Error: bad action xml.", agentID));
             }
         }
     }
@@ -274,14 +281,17 @@ public class SimulationState {
     public Dictionary<int, ObjectState> objects;
     public MailBox<Action>              readyActionQueue;
     public MailBox<PerceptRequest>      perceptRequests;
+    public MailBox<string>              stdout;
 
     public SimulationState(string ConfigurationFilePath) {
-        config           = new Dictionary<string, string>();
-        agents           = new Dictionary<int, AgentState>();
-        objects          = new Dictionary<int, ObjectState>();
-        readyActionQueue = new MailBox<Action>();
-        perceptRequests  = new MailBox<PerceptRequest>();
+        config               = new Dictionary<string, string>();
+        agents               = new Dictionary<int, AgentState>();
+        objects              = new Dictionary<int, ObjectState>();
+        readyActionQueue     = new MailBox<Action>();
+        perceptRequests      = new MailBox<PerceptRequest>();
+        stdout               = new MailBox<string>();
 
+        /*
         XmlDocument document = new XmlDocument();
         document.Load(new StreamReader("config.xml"));
 
@@ -298,10 +308,11 @@ public class SimulationState {
             config["action_duration_"+name] = duration; 
         }
 
-        Debug.Log("Loaded the following configuration:");
+        stdout.Send("Loaded the following configuration:");
         foreach (KeyValuePair<string, string> pair in config) {
-            Debug.Log(String.Format("{0}:\t{1}", pair.Key, pair.Value));
+            stdout.Send(String.Format("{0}:\t{1}", pair.Key, pair.Value));
         }
+        */
     }
 
     public bool executableAction(Action action) {
@@ -372,7 +383,7 @@ public class SimulationState {
             }
         }
         
-        Debug.Log(String.Format("Agent {0} performs action {1} of type {2}", 
+        stdout.Send(String.Format("Agent {0} performs action {1} of type {2}", 
             action.agentID, 
             action.actionID, 
             action.type));
@@ -383,10 +394,10 @@ public class SimulationState {
 public class SimulationEngine {
     
     public ConnectionHandler connectionHandler;
-    public ActionHandler     actionHandler;
+    public SimulationState   simulationState;
 
     public SimulationEngine(SimulationState ss) {
-        actionHandler     = new ActionHandler(ss);
+        simulationState   = ss;
         connectionHandler = new ConnectionHandler(ss);
     }
 
@@ -407,24 +418,10 @@ public class SimulationEngine {
     }
 
     public void generatePercepts() {
-        // aca hay que sacar todos los requests de la cola y para cada uno, generar la percepcion correspondiente
-    }
-}
-
-// Runs within Unity3D
-public class ActionHandler {
-    
-    private SimulationState simulationState;
-
-    public ActionHandler(SimulationState ss) {
-        simulationState = ss;
+        // aca hay que sacar todos los requests de percepciones de la cola y para cada uno, generar la percepcion correspondiente
     }
 
-    public void handleAction() {
-        Debug.Log("handle action ");
-    }
-
-    public void handleAction2() {
+    public void handleActions() {
 
         Action                      currentAction;
         MailBox<Action>             raq    = simulationState.readyActionQueue;
@@ -450,9 +447,14 @@ public class ActionHandler {
                 }
             }
             catch (System.Collections.Generic.KeyNotFoundException) {
-                Debug.Log(String.Format("AH: Error: agent id {0} not present in agent database.", agentID));
+                simulationState.stdout.Send(String.Format("AH: Error: agent id {0} not present in agent database.", agentID));
             }
         }
+    }
+
+    public void instantiateAgents() {
+        // aca hay que sacat todos los requests de instanciacion de agentes de la cola y para cada uno crearle una capsula y asociarlos
+        // tambien hay que fijarse si 
     }
 }
 
@@ -460,20 +462,21 @@ public class ActionHandler {
 public class ConnectionHandler {
 
     // NETWORK & OPERATION
-    private Thread                connectionHandlerThread;
-    private TcpListener           tcpListener;
-    private TcpClient             tcpClient;
+    public Thread                connectionHandlerThread;
+    public TcpListener           tcpListener;
+    public TcpClient             tcpClient;
 
     // SIMULATION
-    private bool                  quit;
-    private int                   agentID;
-    private List<AgentConnection> agentConnections;
-    private SimulationState       simulationState;
+    public bool                  quit;
+    public int                   agentID;
+    public List<AgentConnection> agentConnections;
+    public SimulationState       simulationState;
  
     public ConnectionHandler(SimulationState ss) {
         // NETWORK & OPERATION
         tcpListener             = new TcpListener(IPAddress.Parse("127.0.0.1"), 8888);
         connectionHandlerThread = new Thread(new ThreadStart(this.run));
+        connectionHandlerThread.IsBackground = true;
 
         // SIMULATION
         quit                    = false;
@@ -483,14 +486,14 @@ public class ConnectionHandler {
     }
 
     public void start() {
-        Debug.Log("CH: starting thread");
+        simulationState.stdout.Send("CH: starting thread");
         connectionHandlerThread.Start();
     } 
 
     public void stop() {
-        Debug.Log("CH: quitting");
+        simulationState.stdout.Send("CH: quitting");
+
         foreach (AgentConnection ac in agentConnections) {
-            //ac.agentState.connected = false;
             ac.stop();
         }
 
@@ -499,20 +502,26 @@ public class ConnectionHandler {
         // the call to AcceptTcpClient()
         // For this reason, we call Abort() on the thread object.
         quit = true;
-        connectionHandlerThread.Abort();
+        try {
+            connectionHandlerThread.Abort();
+        }
+        catch (ThreadAbortException) {
+            simulationState.stdout.Send("Connection handler thread abort failed.");
+        }
     }
 
     public void run() {
 
         AgentConnection agentConnection;
 
-        Debug.Log("CH: entering main loop");
+        simulationState.stdout.Send("CH: entering main loop");
         tcpListener.Start();
 
         while (!quit) {
+            Thread.Sleep(0);
             tcpClient       = tcpListener.AcceptTcpClient();
             agentConnection = new AgentConnection(simulationState, agentID, tcpClient);
-            Debug.Log(String.Format("CH: accepted client {0}", agentID));
+            simulationState.stdout.Send(String.Format("CH: accepted client {0}", agentID));
 
             agentConnections.Add(agentConnection);
             simulationState.agents.Add(agentID, agentConnection.agentState); // Not quite thread safe.
@@ -520,7 +529,7 @@ public class ConnectionHandler {
             agentConnection.start();
             agentID++;
         }
-        Debug.Log("connection handler: exit main loop");
+        simulationState.stdout.Send("connection handler: exit main loop");
     }
 }
 
@@ -550,6 +559,7 @@ public class AgentConnection {
         streamReader           = new StreamReader(networkStream);
         streamWriter           = new StreamWriter(networkStream);
         agentConnectionThread  = new Thread(new ThreadStart(this.run));
+        agentConnectionThread.IsBackground = true;
 
         // SIMULATION 
         quit                   = false;
@@ -559,18 +569,22 @@ public class AgentConnection {
     }
 
     public void start() {
-        Debug.Log(String.Format("AC {0}: starting |thread", agentID));
+        simulationState.stdout.Send(String.Format("AC {0}: starting thread", agentID));
         agentConnectionThread.Start();
     }
 
     public void stop() {
         quit = true;
-        Debug.Log(String.Format("AC {0}: quitting", agentID));
-        agentConnectionThread.Abort();
+        simulationState.stdout.Send(String.Format("AC {0}: quitting", agentID));
+        try {
+            agentConnectionThread.Abort();
+        }
+        catch (ThreadAbortException) {
+            simulationState.stdout.Send("Agent connection thread abort failed.");
+        }
     }
 
     public void run() {
-
         MailBox<Action>         actions         = agentState.actions;
         MailBox<ActionResult>   results         = agentState.results;
         MailBox<Percept>        percepts        = agentState.percepts;
@@ -581,11 +595,12 @@ public class AgentConnection {
 
         // Authenticate
         if (! authenticate()) {
-            Debug.Log(String.Format("AC {0}: Authentication error.", agentID));
+            simulationState.stdout.Send(String.Format("AC {0}: Authentication error.", agentID));
             quit = true;
         }
         
         while (!quit) {
+            Thread.Sleep(0);
             try {
                 perceptRequests.Send(new PerceptRequest(agentID, percepts));    // send a percept request to unity
                 percepts.Recv(out percept);                                     // block until I receive percept from unity
@@ -612,17 +627,17 @@ public class AgentConnection {
         }
         try {
             tcpClient.Close();
-            Debug.Log(String.Format("AC {0}: Connection closed.", agentID));
+            simulationState.stdout.Send(String.Format("AC {0}: Connection closed.", agentID));
         }
         catch (System.ObjectDisposedException) {
-            Debug.Log(String.Format("AC {0}: Error while closing connection.", agentID));
+            simulationState.stdout.Send(String.Format("AC {0}: Error while closing connection.", agentID));
         }
     }
 
     private bool authenticate() {
         bool   result = false;
         string xml    = streamReader.ReadLine();
-        Debug.Log(String.Format("AC {0}: received authentication: {1}", agentID, xml));
+        simulationState.stdout.Send(String.Format("AC {0}: received authentication: {1}", agentID, xml));
         try {
             // It might be the case that the string passed in null or 
             // empty, in which case a default action of type noop is made.
@@ -647,7 +662,7 @@ public class AgentConnection {
         }
         catch (System.Xml.XmlException) {
             // TODO somehow signal failure to agent
-            Debug.Log(String.Format("AC {0}: Error: bad authentication xml.", agentID));
+            simulationState.stdout.Send(String.Format("AC {0}: Error: bad authentication xml.", agentID));
         }
         return result;
     }
@@ -666,7 +681,7 @@ public class AgentConnection {
 
         // read action xml string from the wire
         string message = streamReader.ReadLine();
-        Debug.Log(String.Format("AC {0}: received action: {1}", agentID, message));
+        simulationState.stdout.Send(String.Format("AC {0}: received action: {1}", agentID, message));
         // convert xml into action object
         action = new Action(simulationState, agentID, message);
     }

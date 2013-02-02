@@ -21,9 +21,8 @@ public class StandaloneServer {
 
     static void Start() {
 
-        float delta = 0.1f;
-
         quit = false;
+
         ss = new SimulationState("config.xml");
         se = new SimulationEngine(ss);
 
@@ -31,17 +30,13 @@ public class StandaloneServer {
         Console.WriteLine("Note: there is no ANY key on your keyboard.");
 
         se.start();
-
-        /*
-        InvokeRepeating( "se.generatePercepts"           , 0, delta );
-        InvokeRepeating( "se.actionHandler.handleAction" , 0, delta );
-        */
     }
 
     static void Update() {
         // OOP FTW
         se.generatePercepts(); 
-        se.actionHandler.handleAction();
+        se.handleActions();
+        se.instantiateAgents();
     }
 
     // Main simulates a Unity3D MonoBehaviour component. 

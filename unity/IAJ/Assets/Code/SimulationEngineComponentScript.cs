@@ -10,80 +10,74 @@ using System.Threading;
 using System.Xml;
 
 /******************************************************************************/
-public class StringQueue {
-    
-    private Queue queue;
-    
-    public StringQueue() {
-        queue = new Queue();
-    }
-    
-    public void Enqueue(string str) {
-        lock (this) {
-            queue.Enqueue(str);
-        }
-    }
-    
-    public bool Dequeue(out string str) {
-        lock (this) {
-            bool result = false;
-            str = null;
-            if (queue.Count > 0) {
-                str = (string)queue.Dequeue();
-                result = true;
-            }
-            return result;
-        }
-    }
-    
-    public bool isEmpty() {
-        return (queue.Count == 0);
-    }
-    
-    public bool notEmpty() {
-        return (queue.Count > 0);
-    }
-}
-
-/******************************************************************************/
 public class SimulationEngineComponentScript : MonoBehaviour {
 
     // SIMULATION
-    SimulationState  ss;
-    SimulationEngine se;
+    private SimulationState     ss;
+    private SimulationEngine    se;
 
     // UNITY GUI
-    public GUISkin mySkin;
-    public Vector2 scrollPosition;
-    private string outputText = "";
-    private StringQueue stdout = new StringQueue();
+    public  GUISkin             mySkin;
+    public  Vector2             scrollPosition;
+    public  string              outputText = "";
     
     // Use this for initialization
     void Start () {
-        ss = new SimulationState("config.xml");
-        stdout.Enqueue("Finished Start.");
+        ss = new SimulationState("C:\\config.xml");
+        se = new SimulationEngine(ss);
+
+        se.start();
+
+        InvokeRepeating( "PrintOutput",       0, 0.1f );
+        InvokeRepeating( "GeneratePercepts",  0, 0.1f );
+        InvokeRepeating( "HandleActions",     0, 0.1f );
+        InvokeRepeating( "InstantiateAgents", 0, 0.1f );
+
+        ss.stdout.Send("Start finished.");
     }
     
     // Update is called once per frame
     void Update () {
-        // Get all the text out of the queue.
-        string str;
-        while (stdout.notEmpty()) {
-            if (stdout.Dequeue(out str)) {
-                outputText += str;
-            }
-        }
-        
     }
 
     void OnGUI () {
         GUI.skin = mySkin;
+        
         scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUILayout.Width(256), GUILayout.Height(512));
         GUILayout.Box(outputText);
         GUILayout.EndScrollView();
+
+        if (GUI.Button(new Rect(4,512,248,20), "Stop")) {
+            ss.stdout.Send("Stopping...");
+            se.stop();
+        }
     }
 
     void OnApplicationQuit() {
+        ss.stdout.Send("Quitting...");
         se.stop();
+    }
+
+
+    void PrintOutput() {
+        // Get all the text out of the queue.
+        string str;
+        while (ss.stdout.notEmpty()) {
+            if (ss.stdout.Recv(out str)) {
+                outputText += str + "\n";
+            }
+        }
+    }
+
+    void GeneratePercepts() {
+        se.generatePercepts();
+    }
+
+    void HandleActions() {
+        se.handleActions();
+    }
+
+    void InstantiateAgents() {
+        se.instantiateAgents();
     }
 }
