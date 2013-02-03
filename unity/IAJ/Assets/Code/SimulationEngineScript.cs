@@ -45,7 +45,7 @@ using Pathfinding.Nodes;
 
 public class Percept {
 	
-	public List<PerceptElement> elements = new List<PerceptElement>();
+	public List<List<IPerceivableEntity> > elements = new List<List<IPerceivableEntity> >();
 	
 	// the perception is created and generated here
 	public Percept(SimulationState state, int agentID) {
@@ -57,46 +57,52 @@ public class Percept {
 		string aux = "";
 		Hashtable dic;
 		
-		foreach (PerceptElement e in elements){
-			switch(e.elementType)
-			{
-				case 0: 											// Entity
-					dic = e.entity.perception();
-					foreach(DictionaryEntry entry in dic){
-						Debug.Log(entry.Key + ": " + entry.Value);
-					}
-					break;
-				case 1:												// List of entities
-					foreach(Entity entity in e.entities){
-						dic = entity.perception();
-						foreach(DictionaryEntry entry in dic){
-							Debug.Log(entry.Key + ": " + entry.Value);
-						}
-					}
-					break;
-				case 2:												// List of nodes
-					foreach(GridNode node in e.nodes){
-						//TODO generar alguna manera de pasaar a texto los nodos
-						node.ContainsConnection(node);
-					}
-					break;
+		foreach (List<IPerceivableEntity> list in elements){
+//			switch(e.elementType)
+//			{
+//				case 0: 											// Entity
+//					dic = e.entity.perception();
+//					foreach(DictionaryEntry entry in dic){
+//						Debug.Log(entry.Key + ": " + entry.Value);
+//					}
+//					break;
+//				case 1:												// List of entities
+//					foreach(Entity entity in e.entities){
+//						dic = entity.perception();
+//						foreach(DictionaryEntry entry in dic){
+//							Debug.Log(entry.Key + ": " + entry.Value);
+//						}
+//					}
+//					break;
+//				case 2:												// List of nodes
+//					foreach(GridNode node in e.nodes){
+//						//TODO generar alguna manera de pasaar a texto los nodos
+//						node.ContainsConnection(node);
+//					}
+//					break;
+//			}
+			foreach(IPerceivableEntity e in list){
+				dic = e.perception();
+				foreach(DictionaryEntry entry in dic){
+					Debug.Log(entry.Key + ": " + entry.Value);
+				}
 			}
 		}
 		return aux; 
 	}
 	
 	// posiblemente innecesario
-	public void add(Entity e){
-		elements.Add(new PerceptElement(e));
+//	public void add(Entity e){
+//		elements.Add(new PerceptElement(e));
+//	}
+	
+	public void addEntities(List<IPerceivableEntity> e){
+		elements.Add(e);
 	}
 	
-	public void addEntities(List<Entity> e){
-		elements.Add((new PerceptElement()).addEntities(e));
-	}
-	
-	public void addNodes(List<GridNode> e){
-		elements.Add((new PerceptElement()).addNodes(e));
-	}
+//	public void addNodes(List<GridNode> e){
+//		elements.Add((new PerceptElement()).addNodes(e));
+//	}
 //	
 //	public void add(List<GridNode> e){
 //		elements.Add(new PerceptElement(e));

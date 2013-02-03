@@ -29,7 +29,7 @@ public class Agent : Entity {
 	
 	private RigidBodyController _controller;
 	private Engine _engine; 
-	private List<GridNode> nodeList;
+	private List<PerceivableNode> nodeList;
 	
 	public static Agent Create(	Object prefab, 
 								Vector3 position, 
@@ -65,14 +65,14 @@ public class Agent : Entity {
 		
 		// TEST
 		if (!_controller.moving && nodeList.Count > 1)
-			_controller.move((Vector3)(nodeList[Random.Range(0, nodeList.Count)].position));	
+			_controller.move((Vector3)(nodeList[Random.Range(0, nodeList.Count)].node.position));	
 		// TEST
 		
 	}
 	
 		
 	public void moveToNode(int node){
-		_controller.move((Vector3)(nodeList[node].position));	
+		_controller.move((Vector3)(nodeList[node].node.position));	
 	}
 	
 	public void moveToNode(Vector3 target){
@@ -139,7 +139,7 @@ public class Agent : Entity {
 	}
 
 	
-	private List<GridNode> perceptNodes(){
+	private List<PerceivableNode> perceptNodes(){
 		GridGraph graph = AstarPath.active.astarData.gridGraph;
 		GridNode  node  = AstarPath.active.GetNearest(transform.position).node as GridNode;
 		Node[]    nodes = graph.nodes;
@@ -147,9 +147,9 @@ public class Agent : Entity {
 		
 		int[] neighbourOffsets = graph.neighbourOffsets;
 		
-		List   <GridNode> connections = new List   <GridNode>();
-		Queue  <BFNode>   q           = new Queue  <BFNode>  ();
-		HashSet<GridNode> visited     = new HashSet<GridNode>();
+		List   <PerceivableNode> connections = new List   <PerceivableNode>();
+		Queue  <BFNode>          q           = new Queue  <BFNode>         ();
+		HashSet<GridNode>        visited     = new HashSet<GridNode>       ();
 				
 		//BFS
 		BFNode t = new BFNode(0, node);
@@ -158,7 +158,7 @@ public class Agent : Entity {
 		
 		while (q.Count > 0){
 			t = q.Dequeue();
-			connections.Add(t.node);
+			connections.Add(new PerceivableNode(t.node));
 			if (t.depth < _depthOfSight){ //si no está en el límite, agrego nodos
 				for (int i = 0; i < 8; i++){ //las 8 conexiones posibles de cada nodo
 					index = t.node.GetIndex();
@@ -188,9 +188,9 @@ public class Agent : Entity {
 	
 	public void perceive(Percept p){
 		
-		p.addEntities(perceptObjects<Agent>("agent").Cast<Entity>().ToList());
-		p.addEntities(perceptObjects<Gold> ("gold") .Cast<Entity>().ToList());
-		p.addNodes(perceptNodes());
+		p.addEntities(perceptObjects<Agent>("agent").Cast<IPerceivableEntity>().ToList());
+		p.addEntities(perceptObjects<Gold> ("gold") .Cast<IPerceivableEntity>().ToList());
+		p.addEntities(perceptNodes()				.Cast<IPerceivableEntity>().ToList());
 	}
 }
 
