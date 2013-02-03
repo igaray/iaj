@@ -385,11 +385,13 @@ public class SimulationState {
 // Runs within Unity3D
 public class SimulationEngine {
     
+	public SimulationState   simulationState;
     public ConnectionHandler connectionHandler;
-    public ActionHandler     actionHandler;
+//    public ActionHandler     actionHandler;
 
     public SimulationEngine(SimulationState ss) {
-        actionHandler     = new ActionHandler(ss);
+		simulationState   = ss;
+//        actionHandler     = new ActionHandler(ss);
         connectionHandler = new ConnectionHandler(ss);
     }
 
@@ -412,22 +414,8 @@ public class SimulationEngine {
     public void generatePercepts() {
         // aca hay que sacar todos los requests de la cola y para cada uno, generar la percepcion correspondiente
     }
-}
 
-// Runs within Unity3D
-public class ActionHandler {
-    
-    private SimulationState simulationState;
-
-    public ActionHandler(SimulationState ss) {
-        simulationState = ss;
-    }
-
-    public void handleAction() {
-        Debug.Log("handle action ");
-    }
-
-    public void handleAction2() {
+    public void handleActions() {
 
         Action                      currentAction;
         MailBox<Action>             raq    = simulationState.readyActionQueue;
@@ -457,6 +445,10 @@ public class ActionHandler {
             }
         }
     }
+
+	public void instantiateAgents() {
+		
+	}
 }
 
 // Runs within its own thread, cannot call Unity3D API methods.
