@@ -241,8 +241,8 @@ public class AgentState {
     public Position              position;
     public ActionResult          lastActionResult;
 	
-	public Agent				 agentController;  //TODO: asignarlo cuando se crea a este muchacho
-
+	public Agent				 agentController;   //TODO: asignarlo cuando se crea a este muchacho
+													//Agregado por Leo
     public AgentState(SimulationState ss, int id) {
         this.id               = id;
         this.connected        = true;
@@ -273,7 +273,9 @@ public class SimulationState {
     public Dictionary<string, string>   config;
     public Dictionary<string, int>      agentIDs;
     public Dictionary<int, AgentState>  agents;
+	// Agregado por Leo
 //	public List<AgentState>             agents; // no queda mejor?
+	// Agregado por Leo
     public Dictionary<int, ObjectState> objects;
     public MailBox<Action>              readyActionQueue;
     public MailBox<PerceptRequest>      perceptRequests;

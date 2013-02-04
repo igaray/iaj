@@ -5,7 +5,7 @@ public class Gold : EObject {
 	
 	public static Gold Create(	Object  prefab, 
 								Vector3 position, 
-								Engine  engine,
+								Engine  engine,			//this may not be necessary
 								string  description, 
 								string  name, 
 								int 	weigth) {
@@ -16,7 +16,6 @@ public class Gold : EObject {
 		gold.weigth        = weigth;
 		gold.description   = description;
 		gold.name          = name;
-		gold.engine		   = engine;
 		
 		return gold;
 	}

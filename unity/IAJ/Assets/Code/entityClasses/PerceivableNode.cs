@@ -17,8 +17,8 @@ public class PerceivableNode : IPerceivableEntity
 	{
 		Hashtable d = new Hashtable();
 		
-		d["name"]     = node.GetIndex(); 
-		d["position"] = (Vector3)node.position;
+		d["name"]     = _node.GetIndex(); 
+		d["position"] = (Vector3)_node.position;
 		// TODO: agregar conexiones?
 		return d;
 	}

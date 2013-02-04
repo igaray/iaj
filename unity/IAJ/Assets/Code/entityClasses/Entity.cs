@@ -7,14 +7,14 @@ public abstract class Entity : MonoBehaviour, IPerceivableEntity {
 
 	public string    description;
 	public string    type;
-	public Engine    _engine;
+	//public Engine    _engine;
 	public GridGraph _graph;
 	
 	private Transform _transform;
 	
 	public virtual void Start(){
 		_transform = this.transform;
-		graph = AstarPath.active.astarData.gridGraph;
+		_graph = AstarPath.active.astarData.gridGraph;
 	}
 	
 	public virtual Hashtable perception(){

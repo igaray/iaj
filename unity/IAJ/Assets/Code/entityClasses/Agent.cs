@@ -56,14 +56,14 @@ public class Agent : Entity {
 		
 		// TEST
 		if (!_controller.moving && nodeList.Count > 1)
-			_controller.move((Vector3)(nodeList[Random.Range(0, nodeList.Count)].node.position));	
+			_controller.move((Vector3)(nodeList[Random.Range(0, nodeList.Count)]._node.position));	
 		// TEST
 		
 	}
 	
 		
 	public void moveToNode(int node){
-		_controller.move((Vector3)(nodeList[node].node.position));	
+		_controller.move((Vector3)(nodeList[node]._node.position));	
 	}
 	
 	public void moveToNode(Vector3 target){

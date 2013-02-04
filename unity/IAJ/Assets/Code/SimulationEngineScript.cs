@@ -43,71 +43,6 @@ using Pathfinding.Nodes;
 //}
 //
 
-public class Percept {
-	
-	public List<List<IPerceivableEntity> > elements = new List<List<IPerceivableEntity> >();
-	
-	// the perception is created and generated here
-	public Percept(SimulationState state, int agentID) {
-		state.agents[agentID].agentController.perceive(this); 
-	}
-	
-	public string toProlog() {
-		
-		string aux = "";
-		Hashtable dic;
-		
-		foreach (List<IPerceivableEntity> list in elements){
-//			switch(e.elementType)
-//			{
-//				case 0: 											// Entity
-//					dic = e.entity.perception();
-//					foreach(DictionaryEntry entry in dic){
-//						Debug.Log(entry.Key + ": " + entry.Value);
-//					}
-//					break;
-//				case 1:												// List of entities
-//					foreach(Entity entity in e.entities){
-//						dic = entity.perception();
-//						foreach(DictionaryEntry entry in dic){
-//							Debug.Log(entry.Key + ": " + entry.Value);
-//						}
-//					}
-//					break;
-//				case 2:												// List of nodes
-//					foreach(GridNode node in e.nodes){
-//						//TODO generar alguna manera de pasaar a texto los nodos
-//						node.ContainsConnection(node);
-//					}
-//					break;
-//			}
-			foreach(IPerceivableEntity e in list){
-				dic = e.perception();
-				foreach(DictionaryEntry entry in dic){
-					Debug.Log(entry.Key + ": " + entry.Value);
-				}
-			}
-		}
-		return aux; 
-	}
-	
-	// posiblemente innecesario
-//	public void add(Entity e){
-//		elements.Add(new PerceptElement(e));
-//	}
-	
-	public void addEntities(List<IPerceivableEntity> e){
-		elements.Add(e);
-	}
-	
-//	public void addNodes(List<GridNode> e){
-//		elements.Add((new PerceptElement()).addNodes(e));
-//	}
-//	
-//	public void add(List<GridNode> e){
-//		elements.Add(new PerceptElement(e));
-//	}
-}
 
 //public class PerceptRequest {
 //	
@@ -120,6 +55,8 @@ public class Percept {
 //	}	
 //}
 
+/* deprecated, now we should use MailBox<>
+ */
 public class ActionQueue {
 	
 	private Queue queue;
@@ -361,7 +298,6 @@ public class RequestQueue {
 //}
 
 
-
 /******************************************************************************/
 //public class SimulationEngine {
 //    
@@ -418,6 +354,7 @@ public class ThreadTest {
         }
    }
 }
+
 public class NetworkTest {
     
     private string name;
@@ -475,8 +412,6 @@ public class NetworkTest {
    }
 }
 
-
-
 /******************************************************************************/
 public class SimulationEngineScript : MonoBehaviour {
     
@@ -505,11 +440,6 @@ public class SimulationEngineScript : MonoBehaviour {
 		InvokeRepeating("HandleActions",    0.0f, 0.1f);
     }
     
-	// TODO LEO
-//	void makePercept(int agentID, MailBox<Percept> percepts) {
-//		
-//	}
-	
 	void GeneratePercepts () {
 		
 		PerceptRequest request;
@@ -521,10 +451,7 @@ public class SimulationEngineScript : MonoBehaviour {
 			perceptRequests.Dequeue(out request);
 
 			// genereate the percept
-			// TODO LEO: implementar esto
-			//makePercept(request.agentID, request.agentPerceptMailbox);
-	
-			Percept percept = new Percept(state, request.agentID);
+			Percept percept = new Percept(state, request.agentID); //Agregado por Leo
 			
 			// insert the percept in the agent percept mailbox}
 			request.agentPerceptMailbox.Send(percept);

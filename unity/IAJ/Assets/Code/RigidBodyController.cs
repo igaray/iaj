@@ -8,18 +8,18 @@ using System.Collections;
  
 public class RigidBodyController : MonoBehaviour {
  
-	public  float   _speed             = 5.0f;
-	public  float   _gravity           = 9.81f;
-	public  float   _maxVelocityChange = 10.0f;
-	public  int     _proximityRange    = 1;
+	public  float   _speed            = 5.0f;
+	public  float   _gravity          = 9.81f;
+	public  float   maxVelocityChange = 10.0f;
+	public  int     _proximityRange   = 1;
 	public  Vector3 target;
-	public  bool    moving 			   = false;
-	private bool    grounded           = false;
+	public  bool    moving 			  = false;
+	private bool    grounded          = false;
 	private Vector3 velocityVector;
 	private Agent   _agent;
 	
 	void Start(){
-		agent = GetComponent<Agent>();
+		_agent = GetComponent<Agent>();
 	}
   
 	void Awake () {
@@ -37,7 +37,7 @@ public class RigidBodyController : MonoBehaviour {
 				
 		        Vector3 targetVelocity = (target - transform.position).normalized;
 		        targetVelocity = transform.TransformDirection(targetVelocity);
-		        targetVelocity *= speed;
+		        targetVelocity *= _speed;
 	 
 		        // Apply a force that attempts to reach our target velocity
 		        Vector3 velocity = rigidbody.velocity;
@@ -52,12 +52,11 @@ public class RigidBodyController : MonoBehaviour {
 	    }
  
 	    // We apply gravity manually for more tuning control
-	    rigidbody.AddForce(new Vector3 (0, -gravity * rigidbody.mass, 0));
+	    rigidbody.AddForce(new Vector3 (0, -_gravity * rigidbody.mass, 0));
  
 	    grounded = false;
 	}
 
-	//
 	void OnCollisionStay () {
 	    grounded = true;    
 	}
