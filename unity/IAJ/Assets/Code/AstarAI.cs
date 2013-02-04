@@ -4,7 +4,7 @@ using System.Collections;
 //This line should always be present at the top of scripts which use pathfinding
 using Pathfinding;
 
-
+// This class will be deleted sometime soon
 public class AstarAI : MonoBehaviour {
     //The point to move to
     public Vector3 targetPosition;

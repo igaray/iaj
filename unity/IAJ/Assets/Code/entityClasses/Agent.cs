@@ -17,8 +17,7 @@ public class Agent : Entity {
 	private float _delta;   			// time between ticks of "simulation"
 	public  int   life;
 	public  int   _depthOfSight;
-	public  int   velocity = 5;
-	
+		
 	private RigidBodyController   _controller;	
 	public  List<EObject>         backpack = new List<EObject>();
 	private List<PerceivableNode> nodeList;							// TODO: Borrar. Es para test nomás
@@ -112,8 +111,7 @@ public class Agent : Entity {
 	
 	private List<ObjectType> perceptObjects<ObjectType>(string type, string layer = "perception") 
 		where ObjectType : Component // cuánta magia
-									 // acá restrinjo el tipo pasado por 
-									 // parámetro
+									 // acá restrinjo el tipo pasado por parámetro
 		{
 		Collider[] colliders = 
 			Physics.OverlapSphere(this.transform.position, _depthOfSight,
@@ -124,11 +122,8 @@ public class Agent : Entity {
 			if (hit.tag == type)
 				aux.Add(hit.gameObject.GetComponent<ObjectType>());
     	}
-//		if (aux.Count > 0)
-//			Debug.Log(aux.Count);
 		return aux;
 	}
-
 	
 	private List<PerceivableNode> perceptNodes(){
 		//GridGraph graph = AstarPath.active.astarData.gridGraph;
@@ -142,7 +137,7 @@ public class Agent : Entity {
 		Queue  <BFNode>          q           = new Queue  <BFNode>         ();
 		HashSet<GridNode>        visited     = new HashSet<GridNode>       ();
 				
-		//BFS
+		//Breadth First Search
 		BFNode t = new BFNode(0, node);
 		q.Enqueue(t);
 		Node aux;
