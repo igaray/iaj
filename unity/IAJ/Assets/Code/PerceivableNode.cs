@@ -6,11 +6,11 @@ using UnityEngine;
 
 public class PerceivableNode : IPerceivableEntity
 {
-	public GridNode node;
+	public GridNode _node;
 	
 	public PerceivableNode (GridNode node)
 	{
-		this.node = node;
+		this._node = node;
 	}
 	
 	public Hashtable perception ()

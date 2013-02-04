@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
+// This class will be erased, and replaced by the real engine
 public class Engine : MonoBehaviour {
 	
 	public GameObject agent;

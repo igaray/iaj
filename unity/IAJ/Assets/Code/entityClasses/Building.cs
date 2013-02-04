@@ -3,13 +3,12 @@ using System.Collections;
 
 public abstract class Building : Entity {
 
-	public Vector3 _position;
-	public Bounds  _bounds;
+	public Bounds _bounds;
 	
-	void Start () {
-		_bounds   = gameObject.collider.bounds;
+	public override void Start () {
+		base.Start();		
+		_bounds = gameObject.collider.bounds;		
 		gameObject.collider.enabled = false;
-		_position = transform.position;
 	}
 	
 	public bool isInside(Vector3 p){

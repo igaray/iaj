@@ -10,8 +10,6 @@ using Pathfinding;
 
 public class Agent : Entity {
 	
-//	public static Object prefab = Resources.Load("Prefabs/Capsule");
-	
 	public  int   lifeTotal = 100;
 	private float _nodeSize = 2; 		// size of the node in the world measure
 										// Hardcodeado. Traté de hacerlo andar dinámicamente, pero no pude.
@@ -21,15 +19,9 @@ public class Agent : Entity {
 	public  int   _depthOfSight;
 	public  int   velocity = 5;
 	
-	public  List<EObject> backpack = new List<EObject>();
-	
-//	private Vector3 target = new Vector3(12, 0, 18);
-//	private bool    moving = false;
-//	private Vector3 velocityVector;
-	
-	private RigidBodyController _controller;
-	private Engine _engine; 
-	private List<PerceivableNode> nodeList;
+	private RigidBodyController   _controller;	
+	public  List<EObject>         backpack = new List<EObject>();
+	private List<PerceivableNode> nodeList;							// TODO: Borrar. Es para test nomás
 	
 	public static Agent Create(	Object prefab, 
 								Vector3 position, 
@@ -44,16 +36,15 @@ public class Agent : Entity {
 		agent.life         = lifeTotal;
 		agent.description  = description;
 		agent.name         = name;
-		agent._engine	   = engine;		
+		agent._delta	   = engine.delta;		
 
 						  			
 		return agent;
 	}
 	
 	void Start(){
-		this._delta      = _engine.delta;
-		this._controller = this.GetComponent<RigidBodyController>();
-		
+		base.Start();		
+		this._controller = this.GetComponent<RigidBodyController>();		
 		InvokeRepeating("execute", 0, _delta);
 	}
 	
@@ -140,12 +131,12 @@ public class Agent : Entity {
 
 	
 	private List<PerceivableNode> perceptNodes(){
-		GridGraph graph = AstarPath.active.astarData.gridGraph;
+		//GridGraph graph = AstarPath.active.astarData.gridGraph;
 		GridNode  node  = AstarPath.active.GetNearest(transform.position).node as GridNode;
-		Node[]    nodes = graph.nodes;
+		Node[]    nodes = _graph.nodes;
 		int       index = node.GetIndex();
 		
-		int[] neighbourOffsets = graph.neighbourOffsets;
+		int[] neighbourOffsets = _graph.neighbourOffsets;
 		
 		List   <PerceivableNode> connections = new List   <PerceivableNode>();
 		Queue  <BFNode>          q           = new Queue  <BFNode>         ();

@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 
 public class Gold : EObject {
+	
 	public static Gold Create(	Object  prefab, 
 								Vector3 position, 
 								Engine  engine,
@@ -12,10 +13,10 @@ public class Gold : EObject {
 		GameObject gameObj = Instantiate(prefab, position, Quaternion.identity) as GameObject;
 		Gold       gold    = gameObj.GetComponent<Gold>();
 		
-		gold.weigth       = weigth;
-		gold.description  = description;
-		gold.name         = name;
-		gold.engine		  = engine;
+		gold.weigth        = weigth;
+		gold.description   = description;
+		gold.name          = name;
+		gold.engine		   = engine;
 		
 		return gold;
 	}

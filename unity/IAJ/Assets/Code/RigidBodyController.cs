@@ -3,24 +3,20 @@
 using UnityEngine;
 using System.Collections;
  
-
 [RequireComponent (typeof (Rigidbody))]
 [RequireComponent (typeof (CapsuleCollider))]
  
 public class RigidBodyController : MonoBehaviour {
  
-	public float speed = 5.0f;
-	public float gravity = 9.81f;
-	public float maxVelocityChange = 10.0f;
-	public  int   _proximityRange = 1;
-	private bool grounded = false;
- 
-	public Vector3  target;
-	public  bool    moving = false;
+	public  float   _speed             = 5.0f;
+	public  float   _gravity           = 9.81f;
+	public  float   _maxVelocityChange = 10.0f;
+	public  int     _proximityRange    = 1;
+	public  Vector3 target;
+	public  bool    moving 			   = false;
+	private bool    grounded           = false;
 	private Vector3 velocityVector;
-	
-	
-	private Agent agent;
+	private Agent   _agent;
 	
 	void Start(){
 		agent = GetComponent<Agent>();
@@ -34,7 +30,8 @@ public class RigidBodyController : MonoBehaviour {
 	void FixedUpdate () {
 		
 	    if (moving && grounded) {
-	        if (!((target - transform.position).magnitude < _proximityRange)){
+	    
+	        if (!((target - transform.position).magnitude < _proximityRange)){		// if not near
 				
 				// Calculate how fast we should be moving
 				
@@ -59,11 +56,8 @@ public class RigidBodyController : MonoBehaviour {
  
 	    grounded = false;
 	}
-	
-	bool near(){
-		return (target - transform.position).magnitude < _proximityRange;
-	}
- 
+
+	//
 	void OnCollisionStay () {
 	    grounded = true;    
 	}
@@ -73,9 +67,4 @@ public class RigidBodyController : MonoBehaviour {
 		this.target = target;
 	}
  
-//	float CalculateJumpVerticalSpeed () {
-//	    // From the jump height and gravity we deduce the upwards speed 
-//	    // for the character to reach at the apex.
-//	    return Mathf.Sqrt(2 * jumpHeight * gravity);
-//	}
 }
