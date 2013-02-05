@@ -13,14 +13,22 @@ using System.Xml;
 // SYSTEM AUXILIARY CLASSES
 
 /******************************************************************************/
+
+/* All mailboxes that are read from unity run in non blocking mode, so as not to 
+ * block unity's execution.
+ * All mailboxes that are read by the agents run in blocking mode, becuase they 
+ * are used to synchronize them with unity.
+ */
 public class MailBox<T> {
 
     private Queue<T>  queue;
     private Semaphore semaphore;
+    private bool      nbmode;
 
-    public MailBox() {
-        queue     = new System.Collections.Generic.Queue<T>();
-        semaphore = new Semaphore(0, Int32.MaxValue);
+    public MailBox(bool nbmode) {
+        this.nbmode = nbmode;
+        queue       = new System.Collections.Generic.Queue<T>();
+        semaphore   = new Semaphore(0, Int32.MaxValue);
     }
 
     public void Send(T item) {
@@ -58,40 +66,49 @@ public class MailBox<T> {
      * to insert an item in the queue, and a deadlock will occur.  
      */
     public bool Recv(out T item) {
-        bool result;
-        semaphore.WaitOne();
-        lock (this) {
-            if (queue.Count > 0) {
-                item = (T)queue.Dequeue();
-                result = true;
-            } else {
-                Debug.Log("PANIC! queue is empty.");
-                item = default(T);
-                result = false;
+        bool result = false;
+        item = default(T);
+
+        if (nbmode) {
+            Debug.LogError("PANIC! queue is in non-blocking mode, blocking recv called.");
+        }
+        else {
+            semaphore.WaitOne();
+            lock (this) {
+                if (queue.Count > 0) {
+                    item = (T)queue.Dequeue();
+                    result = true;
+                } else {
+                    Debug.LogError("PANIC! queue is empty.");
+                }
             }
         }
         return result;
     }
 
     public bool NBRecv(out T item) {
-        bool result;
-        lock (this) {
-            if (queue.Count > 0) {
-                item = (T)queue.Dequeue();
-                result = true;
-            } else {
-                item = default(T);
-                result = false;
+        bool result = false;
+        item = default(T);
+
+        if (nbmode) {
+            lock (this) {
+                if (queue.Count > 0) {
+                    item = (T)queue.Dequeue();
+                    result = true;
+                }
             }
+        }
+        else {
+            Debug.LogError("PANIC: queue used in blocking mode, non-blocking recv called.");            
         }
         return result;
     }
 
-    public bool isEmpty() {
+    public bool IsEmpty() {
         return (queue.Count == 0);
     }
     
-    public bool notEmpty() {
+    public bool NotEmpty() {
         return (queue.Count > 0);
     }
 }
@@ -253,8 +270,8 @@ public class AgentState {
         this.connected        = true;
         this.lastActionResult = ActionResult.success;
         this.actions          = ss.readyActionQueue;
-        this.results          = new MailBox<ActionResult>();
-        this.percepts         = new MailBox<Percept>();
+        this.results          = new MailBox<ActionResult>(false);
+        this.percepts         = new MailBox<Percept>(false);
     }
 
     public void move(Position vector) {
@@ -287,9 +304,9 @@ public class SimulationState {
         config               = new Dictionary<string, string>();
         agents               = new Dictionary<int, AgentState>();
         objects              = new Dictionary<int, ObjectState>();
-        readyActionQueue     = new MailBox<Action>();
-        perceptRequests      = new MailBox<PerceptRequest>();
-        stdout               = new MailBox<string>();
+        readyActionQueue     = new MailBox<Action>(true);
+        perceptRequests      = new MailBox<PerceptRequest>(true);
+        stdout               = new MailBox<string>(true);
 
         /*
         XmlDocument document = new XmlDocument();
@@ -313,6 +330,16 @@ public class SimulationState {
             stdout.Send(String.Format("{0}:\t{1}", pair.Key, pair.Value));
         }
         */
+
+        /*
+        this is to simulate the end result of reading in the config file
+        */
+        config["simulation_duration"]    = "10";
+        config["action_duration_noop"]   = "1000";
+        config["action_duration_move"]   = "1000";
+        config["action_duration_pickup"] = "0";
+        config["action_duration_drop"]   = "0";
+        config["action_duration_attack"] = "1000";
     }
 
     public bool executableAction(Action action) {
@@ -418,36 +445,52 @@ public class SimulationEngine {
     }
 
     public void generatePercepts() {
-        // aca hay que sacar todos los requests de percepciones de la cola y para cada uno, generar la percepcion correspondiente
+        MailBox<PerceptRequest> requests = simulationState.perceptRequests;
+
+        PerceptRequest request;
+        Percept        percept;
+
+        // aca hay que sacar todos los requests de percepciones de la cola 
+        // y para cada uno, generar la percepcion correspondiente
+        while (requests.NotEmpty()) {
+            if (requests.NBRecv(out request)) {
+                percept = new Percept(simulationState, request.agentID);
+                request.agentPerceptMailbox.Send(percept);
+            } 
+        } 
     }
 
     public void handleActions() {
-
         Action                      currentAction;
         MailBox<Action>             raq    = simulationState.readyActionQueue;
         Dictionary<int, AgentState> agents = simulationState.agents;
 
-        // get action from the ready action queue
-        // if the action is executable,
-        //     put it in unity's action queue
-        //     let the agent know that its action was executable
-        // else
-        //     let the agent know that its action was not executable
-        if (raq.NBRecv(out currentAction)) {
-            int agentID = currentAction.agentID;
-            try {
-                if (simulationState.executableAction(currentAction)) {
-                    agents[agentID].results.Send(ActionResult.success);
-                    agents[agentID].lastActionResult = ActionResult.success;
-                    simulationState.applyActionEffects(currentAction);
+        while (raq.NotEmpty()) {
+            // get action from the ready action queue
+            // if the action is executable,
+            //     put it in unity's action queue
+            //     let the agent know that its action was executable
+            // else
+            //     let the agent know that its action was not executable
+            simulationState.stdout.Send(String.Format("AH: there are actions to process..."));
+            if (raq.NBRecv(out currentAction)) {
+                int agentID = currentAction.agentID;
+                try {
+                    if (simulationState.executableAction(currentAction)) {
+                        simulationState.stdout.Send(String.Format("AH: the action is executable."));
+                        agents[agentID].results.Send(ActionResult.success);
+                        agents[agentID].lastActionResult = ActionResult.success;
+                        simulationState.applyActionEffects(currentAction);
+                    }
+                    else {
+                        simulationState.stdout.Send(String.Format("AH: the action is not executable."));
+                        agents[agentID].results.Send(ActionResult.failure);
+                        agents[agentID].lastActionResult = ActionResult.failure;
+                    }
                 }
-                else {
-                    agents[agentID].results.Send(ActionResult.failure);
-                    agents[agentID].lastActionResult = ActionResult.failure;
+                catch (System.Collections.Generic.KeyNotFoundException) {
+                    simulationState.stdout.Send(String.Format("AH: Error: agent id {0} not present in agent database.", agentID));
                 }
-            }
-            catch (System.Collections.Generic.KeyNotFoundException) {
-                simulationState.stdout.Send(String.Format("AH: Error: agent id {0} not present in agent database.", agentID));
             }
         }
     }
@@ -491,11 +534,17 @@ public class ConnectionHandler {
     } 
 
     public void stop() {
-        simulationState.stdout.Send("CH: quitting");
+        simulationState.stdout.Send("CH: stopping...");
+
+        tcpListener.Stop();
+
+        simulationState.stdout.Send("CH: tcp listener stopped...");
 
         foreach (AgentConnection ac in agentConnections) {
             ac.stop();
         }
+
+        simulationState.stdout.Send("CH: agents stopped...");
 
         // Setting quit to true is rather useless, because the 
         // connection handler's thread will almost surely blocked in 
@@ -508,6 +557,8 @@ public class ConnectionHandler {
         catch (ThreadAbortException) {
             simulationState.stdout.Send("Connection handler thread abort failed.");
         }
+
+        simulationState.stdout.Send("CH: connection thread aborted...");
     }
 
     public void run() {
@@ -515,12 +566,14 @@ public class ConnectionHandler {
         AgentConnection agentConnection;
 
         simulationState.stdout.Send("CH: entering main loop");
+
         tcpListener.Start();
 
         while (!quit) {
             Thread.Sleep(0);
             tcpClient       = tcpListener.AcceptTcpClient();
             agentConnection = new AgentConnection(simulationState, agentID, tcpClient);
+
             simulationState.stdout.Send(String.Format("CH: accepted client {0}", agentID));
 
             agentConnections.Add(agentConnection);
@@ -529,7 +582,8 @@ public class ConnectionHandler {
             agentConnection.start();
             agentID++;
         }
-        simulationState.stdout.Send("connection handler: exit main loop");
+
+        simulationState.stdout.Send("CH: exit main loop");
     }
 }
 
@@ -570,12 +624,15 @@ public class AgentConnection {
 
     public void start() {
         simulationState.stdout.Send(String.Format("AC {0}: starting thread", agentID));
+        
         agentConnectionThread.Start();
     }
 
     public void stop() {
         quit = true;
+
         simulationState.stdout.Send(String.Format("AC {0}: quitting", agentID));
+        
         try {
             agentConnectionThread.Abort();
         }
@@ -599,24 +656,44 @@ public class AgentConnection {
             quit = true;
         }
         
+        simulationState.stdout.Send(String.Format("AC {0}: entering main loop.", agentID));
         while (!quit) {
             Thread.Sleep(0);
             try {
                 perceptRequests.Send(new PerceptRequest(agentID, percepts));    // send a percept request to unity
+
+                simulationState.stdout.Send(String.Format("AC {0}: sending percept request.", agentID));
+
                 percepts.Recv(out percept);                                     // block until I receive percept from unity
+
+                simulationState.stdout.Send(String.Format("AC {0}: percept ready, sending...", agentID));
+
                 sendPercept(percept);                                           // send percept to agent
 
+                simulationState.stdout.Send(String.Format("AC {0}: waiting for action...", agentID));
+
                 receiveAction(out action);                                      // receive action from agent
+
+                simulationState.stdout.Send(String.Format("AC {0}: action received.", agentID));
+
                 if (action.type == ActionType.goodbye) {                        // if the action is say goodbye, close the connection
                     sendResult(ActionResult.success);
                     quit = true;
                 } else {
+                    simulationState.stdout.Send(String.Format("AC {0}: sending action to handler...", agentID));
                     actions.Send(action);                                       // send action to handler
                     if (results.Recv(out result)) {                             // get action result from handler
+                        simulationState.stdout.Send(String.Format("AC {0}: action result received.", agentID));
                         Thread.Sleep(action.duration);                          // sleep for the duration of the action. 
+                        simulationState.stdout.Send(String.Format("AC {0}: sending action result to agent.", agentID));
                         sendResult(result);                                     // send action result to agent
                     }
                 }
+                /*
+                */
+                sendResult(ActionResult.success);
+
+                simulationState.stdout.Send(String.Format("AC {0}: perceive-act loop iteration complete.", agentID));
             }
             catch (System.ObjectDisposedException) {
                 quit = true;
@@ -625,8 +702,10 @@ public class AgentConnection {
                 quit = true;
             }
         }
+        simulationState.stdout.Send(String.Format("AC {0}: quitting...", agentID));
         try {
             tcpClient.Close();
+
             simulationState.stdout.Send(String.Format("AC {0}: Connection closed.", agentID));
         }
         catch (System.ObjectDisposedException) {
@@ -637,12 +716,14 @@ public class AgentConnection {
     private bool authenticate() {
         bool   result = false;
         string xml    = streamReader.ReadLine();
+
         simulationState.stdout.Send(String.Format("AC {0}: received authentication: {1}", agentID, xml));
+        
         try {
             // It might be the case that the string passed in null or 
             // empty, in which case a default action of type noop is made.
             if ((xml == null) || (xml == "")) {
-                return false;
+                simulationState.stdout.Send(String.Format("AC {0}: Error: xml empry or null.", agentID));
             }
             else {
                 XmlDocument document;
@@ -657,12 +738,15 @@ public class AgentConnection {
                 // signal authentication success to agent.
                 streamWriter.Write("success.\r");
                 streamWriter.Flush();
-                return true;
+        
+                result = true;
+                simulationState.stdout.Send(String.Format("AC {0}: successfully authenticated.", agentID));
             }
         }
         catch (System.Xml.XmlException) {
-            // TODO somehow signal failure to agent
             simulationState.stdout.Send(String.Format("AC {0}: Error: bad authentication xml.", agentID));
+            streamWriter.Write("failure.\r");
+            streamWriter.Flush();
         }
         return result;
     }
@@ -677,13 +761,21 @@ public class AgentConnection {
     }
 
     private void receiveAction(out Action action) {
+        action = default(Action);
         // Reading from socket
 
         // read action xml string from the wire
         string message = streamReader.ReadLine();
+
         simulationState.stdout.Send(String.Format("AC {0}: received action: {1}", agentID, message));
+
         // convert xml into action object
-        action = new Action(simulationState, agentID, message);
+        try {
+            action = new Action(simulationState, agentID, message);
+        }
+        catch (Exception e) {
+            Debug.LogError("Error in received action." + e.ToString());
+        } 
     }
 
     private void sendResult(ActionResult result) {

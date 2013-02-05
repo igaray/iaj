@@ -26,14 +26,7 @@ public class SimulationEngineComponentScript : MonoBehaviour {
         ss = new SimulationState("C:\\config.xml");
         se = new SimulationEngine(ss);
 
-        se.start();
-
-        InvokeRepeating( "PrintOutput",       0, 0.1f );
-        InvokeRepeating( "GeneratePercepts",  0, 0.1f );
-        InvokeRepeating( "HandleActions",     0, 0.1f );
-        InvokeRepeating( "InstantiateAgents", 0, 0.1f );
-
-        ss.stdout.Send("Start finished.");
+        InvokeRepeating( "DoWork", 0, 0.1f );
     }
     
     // Update is called once per frame
@@ -43,41 +36,38 @@ public class SimulationEngineComponentScript : MonoBehaviour {
     void OnGUI () {
         GUI.skin = mySkin;
         
-        scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUILayout.Width(256), GUILayout.Height(512));
+        scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUILayout.Width(512), GUILayout.Height(512));
         GUILayout.Box(outputText);
         GUILayout.EndScrollView();
 
-        if (GUI.Button(new Rect(4,512,248,20), "Stop")) {
-            ss.stdout.Send("Stopping...");
+        if (GUI.Button(new Rect(4,512,128,20), "Start")) {
+            ss.stdout.Send("Starting simulation engine...");
+            se.start();
+        }
+
+        if (GUI.Button(new Rect(132,512,128,20), "Stop")) {
+            ss.stdout.Send("Stopping simulation engine...");
             se.stop();
         }
     }
 
     void OnApplicationQuit() {
-        ss.stdout.Send("Quitting...");
         se.stop();
     }
 
 
-    void PrintOutput() {
+    void DoWork() {
+
         // Get all the text out of the queue.
         string str;
-        while (ss.stdout.notEmpty()) {
-            if (ss.stdout.Recv(out str)) {
+        while (ss.stdout.NotEmpty()) {
+            if (ss.stdout.NBRecv(out str)) {
                 outputText += str + "\n";
             }
         }
-    }
 
-    void GeneratePercepts() {
         se.generatePercepts();
-    }
-
-    void HandleActions() {
         se.handleActions();
-    }
-
-    void InstantiateAgents() {
         se.instantiateAgents();
     }
 }
