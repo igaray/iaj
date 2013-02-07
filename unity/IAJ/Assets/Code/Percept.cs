@@ -9,9 +9,14 @@ public class Percept {
 	
 	// the perception is created and generated here
 	public Percept(SimulationState state, int agentID) {
-		state.agents[agentID].agentController.perceive(this); 
+		if (state.agents.ContainsKey(agentID)) {
+			state.agents[agentID].agentController.perceive(this); 
+		}
+		else {
+			Debug.LogError("Percept creation fail.");
+		}
 	}
-	
+
 	public string toProlog() {
 		
 		string aux = "";
@@ -25,7 +30,8 @@ public class Percept {
 				}
 			}
 		}
-		return aux; 
+		//return aux; 
+		return "percept(position(1,2,3), agents([]), objects([]), inventory([])).\r";
 	}
 	
 	public void addEntities(List<IPerceivableEntity> e){

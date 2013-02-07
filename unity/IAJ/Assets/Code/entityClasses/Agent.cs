@@ -24,7 +24,7 @@ public class Agent : Entity {
 	
 	public static Agent Create(	Object prefab, 
 								Vector3 position, 
-								Engine engine,
+								SimulationState ss,
 								string description, 
 								string name, 
 								int lifeTotal) 
@@ -35,7 +35,7 @@ public class Agent : Entity {
 		agent.life         = lifeTotal;
 		agent.description  = description;
 		agent.name         = name;
-		agent._delta	   = engine.delta;		
+		agent._delta	   = ss.delta;		
 
 						  			
 		return agent;

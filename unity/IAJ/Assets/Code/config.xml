@@ -1,0 +1,35 @@
+<config>
+    <simulation_duration>10</simulation_duration> <!-- seconds -->
+    <size>
+        <rows>10</rows> <!-- integer -->
+        <cols>10</cols> <!-- integer -->
+    </size>
+    <vision_length>3</vision_length>  <!-- integer -->
+    <unconscious_time>10000</unconscious_time>  <!-- milliseconds -->
+    <actions>
+        <action 
+            name="noop" 
+            duration="1000">  <!-- name: string, duration: milliseconds -->
+        </action>
+        <action 
+            name="move" 
+            duration="1000">
+        </action>
+        <action 
+            name="pickup" 
+            duration="1000">
+        </action>
+        <action 
+            name="drop" 
+            duration="1000">
+        </action>
+        <action 
+            name="attack" 
+            duration="1000">
+            <effects>
+                <effect type="dec" param="str" value="8" />
+                <effect type="inc" param="def" value="1" />
+            </effects>
+        </action>
+    </actions>
+</config>
