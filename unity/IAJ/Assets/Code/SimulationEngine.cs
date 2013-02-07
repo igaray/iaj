@@ -30,7 +30,6 @@ public class MailBox<T> {
         this.nbmode = nbmode;
         queue       = new System.Collections.Generic.Queue<T>();
         semaphore   = new Semaphore(0, Int32.MaxValue);
-
     }
 
     public void Send(T item) {
@@ -124,11 +123,10 @@ public class Position {
     public int z;
 
     public Position() {
-
     }
 
     public Position(string s) {
-
+        // TODO
     }
 }
 
@@ -137,7 +135,7 @@ public class PerceptRequest {
     public int agentID;
     public MailBox<Percept> agentPerceptMailbox;
 
-    public PerceptRequest(int AID, MailBox<Percept> AP) {
+    public PerceptRequest(int AID, MailBox<Percept> APM) {
         // Aca va informacion que usa Unity para generar la percepcion
         // principalmente, para que agente se esta generando
         // con esto, unity identifica el gameobject correspondiente 
@@ -145,16 +143,16 @@ public class PerceptRequest {
         // ademas, tiene una referencia al mailbox de percepciones del agente
         // en la cual unity va a insertar la percepcion generada
         this.agentID             = AID;
-        this.agentPerceptMailbox = AP;
+        this.agentPerceptMailbox = APM;
     }
 }
 
 public class InstantiateRequest {
 
-	public AgentConnection conn;
+	public AgentConnection agentConnection;
 
-    public InstantiateRequest(AgentConnection connection) {
-		this.conn = connection;
+    public InstantiateRequest(AgentConnection AC) {
+		this.agentConnection = AC;
     }
 }
 
@@ -168,17 +166,15 @@ public enum ActionResult {
 
 public class Action {
     
-    public ActionType type;
-    public int        duration;
+    public ActionType type     = ActionType.noop;
     public string     actionID = "0"; // ID of the action, provided by agent.
-    public int        agentID;        // ID of the agent performing the action.
-    public int        targetID;       // ID of an agent that is the recipient of the action.
-    public int        objectID;
+    public int        agentID  = 0;   // ID of the agent performing the action.
+    public int        targetID = 0;   // ID of an agent that is the recipient of the action.
+    public int        objectID = 0;
+    public int        duration = 0;
     public Position   position;
 
-    public Action(int aid) {
-        this.agentID = aid;
-        this.type    = ActionType.noop;
+    public Action() {
     }
 
     public Action(SimulationState ss, int aid, string xml) {
@@ -248,9 +244,8 @@ public class ObjectState {
 
 public class AgentState {
     
-    public int                   agentID;
-    public bool                  connected;
     public string                name;
+    public int                   agentID;
     public Position              position;
     public ActionResult          lastActionResult;
 	public Agent				 agentController;
@@ -259,14 +254,13 @@ public class AgentState {
     public MailBox<ActionResult> results;
     public MailBox<Percept>      percepts;
 	
-    public AgentState(SimulationState ss, string name, int id) {
-        this.agentID          = id;
-        this.connected        = true;
-        this.lastActionResult = ActionResult.success;
-
+    public AgentState(SimulationState ss, string name, int id, GameObject prefab) {
+        this.agentID           = id;
+        this.lastActionResult  = ActionResult.success;
         this.actions           = ss.readyActionQueue;
         this.results           = new MailBox<ActionResult>(false);
         this.percepts          = new MailBox<Percept>(false);
+        this.agentController   = Agent.Create(prefab, new Vector3(20, 23, 1), ss, "", name, 100);        
 	}
 
     public String toString() {
@@ -335,24 +329,24 @@ public class SimulationEngine {
             //     let the agent know that its action was executable
             // else
             //     let the agent know that its action was not executable
-            simulationState.stdout.Send(String.Format("AH: there are actions to process..."));
+            simulationState.stdout.Send(String.Format("AH: there are actions to process...\n"));
             if (raq.NBRecv(out currentAction)) {
                 int agentID = currentAction.agentID;
                 try {
                     if (simulationState.executableAction(currentAction)) {
-                        simulationState.stdout.Send(String.Format("AH: the action is executable."));
+                        simulationState.stdout.Send(String.Format("AH: the action is executable.\n"));
                         agents[agentID].results.Send(ActionResult.success);
                         agents[agentID].lastActionResult = ActionResult.success;
                         simulationState.applyActionEffects(currentAction);
                     }
                     else {
-                        simulationState.stdout.Send(String.Format("AH: the action is not executable."));
+                        simulationState.stdout.Send(String.Format("AH: the action is not executable.\n"));
                         agents[agentID].results.Send(ActionResult.failure);
                         agents[agentID].lastActionResult = ActionResult.failure;
                     }
                 }
                 catch (System.Collections.Generic.KeyNotFoundException) {
-                    simulationState.stdout.Send(String.Format("AH: Error: agent id {0} not present in agent database.", agentID));
+                    simulationState.stdout.Send(String.Format("AH: Error: agent id {0} not present in agent database.\n", agentID));
                 }
             }
         }
@@ -360,33 +354,38 @@ public class SimulationEngine {
 
     public void instantiateAgents(GameObject prefab) {
 		
-        MailBox<InstantiateRequest> requests = simulationState.instantiateRequests;
 		InstantiateRequest          request;
 		int                         agentID;
 		string                      name;
 		AgentState                  state;		
 		
-		while (requests.NotEmpty()) {
-			if (requests.NBRecv(out request)) {
-				name = request.conn.name;
-				// si el agente ya esta en la bd, no crearle un estado nuevo
-				if (simulationState.agentIDs.ContainsKey(name)) {
+        /*
+        Instantiating an agent in the simulation consists of associating the 
+        AgentConnection with an AgentID and an AgentState.
+        If the agent has not been previously instantiated, a new AgentState must 
+        be created, including an AgentController which will represent it graphically.
+        If the agent has already been instantiated, then its old AgentID and AgentState
+        must be recovered from the SimulationState, and associated to the new AgentConnection.
+        */
+		while (simulationState.instantiateRequests.NotEmpty()) {
+			if (simulationState.instantiateRequests.NBRecv(out request)) {
+				name = request.agentConnection.name;
+				if (simulationState.agentIDs.TryGetValue(name, out agentID)) {
 					// esta
-				}
-				else {
-					// no esta
-					agentID = currentAgentID;
-					state = new AgentState(simulationState, name, agentID);
-					// lo hacemos asi para no tener que pasarle al constructor la referencia al prefab
-					state.agentController   = Agent.Create(prefab, new Vector3(20, 23, 1), simulationState, "", name, 100);
-					request.conn.agentState = state;
-					
-					simulationState.agentIDs.Add(name, agentID);
-					simulationState.agents.Add(agentID, state);	
-					
+                    request.agentConnection.agentState = simulationState.agents[agentID];
+                }
+                else {
+                    // no esta
+                    agentID = currentAgentID;
+                    state   = new AgentState(simulationState, name, agentID, prefab);
+                    request.agentConnection.agentState = state;
+                    
+                    simulationState.agentIDs.Add(name, agentID);
+                    simulationState.agents.Add(agentID, state); 
+                    
                     currentAgentID++;
-					connectionHandler.instantiationResults.Send(true);
-				}
+                }
+                connectionHandler.instantiationResults.Send(true);
 			}
 		} 
     }

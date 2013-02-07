@@ -24,7 +24,7 @@ public class AgentConnection {
     private SimulationState      simulationState;
 
     // PUBLIC VARIABLES
-	public string                name;
+	public string                name = "none";
 	public AgentState            agentState;
 	
 	public AgentConnection(SimulationState ss, TcpClient tcpc) {
@@ -45,18 +45,18 @@ public class AgentConnection {
 	}
 
     public void start() {
-        simulationState.stdout.Send(String.Format("AC {0}: starting thread", agentState.agentID));
+        simulationState.stdout.Send(String.Format("AC {0}: starting thread.\n", name));
         agentConnectionThread.Start();
     }
 
     public void stop() {
         quit = true;
-        simulationState.stdout.Send(String.Format("AC {0}: quitting", agentState.agentID));
+        simulationState.stdout.Send(String.Format("AC {0}: quitting.\n", name));
         try {
             agentConnectionThread.Abort();
         }
         catch (ThreadAbortException) {
-            simulationState.stdout.Send("Agent connection thread abort failed.");
+            simulationState.stdout.Send("Agent connection thread abort failed.\n");
         }
     }
 	
@@ -67,7 +67,7 @@ public class AgentConnection {
 			result = true;
         }
 		else {
-            simulationState.stdout.Send("AC: Authentication error.");
+            simulationState.stdout.Send("AC: Authentication error.\n");
             quit   = true;
 			result = false;
 		}
@@ -91,36 +91,36 @@ public class AgentConnection {
             try {
                 perceptRequests.Send(new PerceptRequest(agentID, percepts));    // send a percept request to unity
 
-                simulationState.stdout.Send(String.Format("AC {0}: sending percept request.", agentID));
+                simulationState.stdout.Send(String.Format("AC {0}: sending percept request.\n", name));
 
                 percepts.Recv(out percept);                                     // block until I receive percept from unity
 
-                simulationState.stdout.Send(String.Format("AC {0}: percept ready, sending...", agentID));
+                simulationState.stdout.Send(String.Format("AC {0}: percept ready, sending...\n", name));
 
                 sendPercept(percept);                                           // send percept to agent
 
-                simulationState.stdout.Send(String.Format("AC {0}: waiting for action...", agentID));
+                simulationState.stdout.Send(String.Format("AC {0}: waiting for action...\n", name));
 
                 receiveAction(out action);                                      // receive action from agent
 
-                simulationState.stdout.Send(String.Format("AC {0}: action received.", agentID));
+                simulationState.stdout.Send(String.Format("AC {0}: action received.\n", name));
 
                 if (action.type == ActionType.goodbye) {                        // if the action is say goodbye, close the connection
                     sendResult(ActionResult.success);
                     quit = true;
                 } else {
-                    simulationState.stdout.Send(String.Format("AC {0}: sending action to handler...", agentID));
+                    simulationState.stdout.Send(String.Format("AC {0}: sending action to handler...\n", name));
                     actions.Send(action);                                       // send action to handler
                     if (results.Recv(out result)) {                             // get action result from handler
-                        simulationState.stdout.Send(String.Format("AC {0}: action result received.", agentID));
+                        simulationState.stdout.Send(String.Format("AC {0}: action result received.\n", name));
                         Thread.Sleep(action.duration);                          // sleep for the duration of the action. 
-                        simulationState.stdout.Send(String.Format("AC {0}: sending action result to agent.", agentID));
+                        simulationState.stdout.Send(String.Format("AC {0}: sending action result to agent.\n", name));
                         sendResult(result);                                     // send action result to agent
                     }
                 }
                 sendResult(ActionResult.success);
 
-                simulationState.stdout.Send(String.Format("AC {0}: perceive-act loop iteration complete.", agentID));
+                simulationState.stdout.Send(String.Format("AC {0}: perceive-act loop iteration complete.\n", name));
             }
             catch (System.ObjectDisposedException) {
                 quit = true;
@@ -129,14 +129,14 @@ public class AgentConnection {
                 quit = true;
             }
         }
-        simulationState.stdout.Send(String.Format("AC {0}: quitting...", agentID));
+        simulationState.stdout.Send(String.Format("AC {0}: quitting...\n", name));
         try {
             tcpClient.Close();
 
-            simulationState.stdout.Send(String.Format("AC {0}: Connection closed.", agentID));
+            simulationState.stdout.Send(String.Format("AC {0}: Connection closed.\n", name));
         }
         catch (System.ObjectDisposedException) {
-            simulationState.stdout.Send(String.Format("AC {0}: Error while closing connection.", agentID));
+            simulationState.stdout.Send(String.Format("AC {0}: Error while closing connection.\n", name));
         }
     }
 
@@ -144,14 +144,14 @@ public class AgentConnection {
         bool   result = false;
         string xml    = streamReader.ReadLine();
 
-        simulationState.stdout.Send(String.Format("AC: received authentication: {0}", xml));
+        simulationState.stdout.Send(String.Format("AC: received authentication:\n{0}\n", xml));
         
         try {
             // It might be the case that the string passed in null or 
             // empty, in which case a default action of type noop is made.
             if ((xml == null) || (xml == "")) {
 
-                simulationState.stdout.Send("AC: Error: xml empry or null.");
+                simulationState.stdout.Send("AC: Error: xml empry or null.\n");
             }
             else {
                 XmlDocument document;
@@ -164,11 +164,11 @@ public class AgentConnection {
                 streamWriter.Flush();
         
                 result = true;
-                simulationState.stdout.Send(String.Format("AC {0}: successfully authenticated.", name));
+                simulationState.stdout.Send(String.Format("AC {0}: successfully authenticated.\n", name));
             }
         }
         catch (System.Xml.XmlException) {
-            simulationState.stdout.Send("AC: Error: bad authentication xml.");
+            simulationState.stdout.Send("AC: Error: bad authentication xml.\n");
             streamWriter.Write("failure.\r");
             streamWriter.Flush();
         }
@@ -178,21 +178,20 @@ public class AgentConnection {
     private void sendPercept(Percept percept) {
         // convert percept to xml string
         // send it over the wire
-		Debug.LogError(percept.toProlog());
         streamWriter.Write(percept.toProlog());
         streamWriter.Flush();
     }
 
     private void receiveAction(out Action action) {
 
-        action = default(Action);
+        action = new Action();
 
         // Reading from socket
 
         // read action xml string from the wire
         string message = streamReader.ReadLine();
 
-        simulationState.stdout.Send(String.Format("AC {0}: received action: {1}", agentState.agentID, message));
+        simulationState.stdout.Send(String.Format("AC {0}: received action:\n{1}\n", name, message));
 
         // convert xml into action object
         try {

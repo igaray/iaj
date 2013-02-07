@@ -42,12 +42,12 @@ public class SimulationEngineComponentScript : MonoBehaviour {
         GUILayout.EndScrollView();
 
         if (GUI.Button(new Rect(4,512,128,20), "Start")) {
-            ss.stdout.Send("Starting simulation engine...");
+            ss.stdout.Send("Starting simulation engine...\n");
             se.start();
         }
 
         if (GUI.Button(new Rect(132,512,128,20), "Stop")) {
-            ss.stdout.Send("Stopping simulation engine...");
+            ss.stdout.Send("Stopping simulation engine...\n");
             se.stop();
         }
     }
@@ -63,7 +63,7 @@ public class SimulationEngineComponentScript : MonoBehaviour {
         string str;
         while (ss.stdout.NotEmpty()) {
             if (ss.stdout.NBRecv(out str)) {
-                outputText += str + "\n";
+                outputText += str;
             }
         }
 

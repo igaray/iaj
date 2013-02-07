@@ -2,7 +2,7 @@
 %--------------------------------------------------------------------%
 start :-
     agent_reset,
-    agent_init,
+    %agent_init,
     connect,
     run,
     disconnect.
@@ -155,9 +155,9 @@ agent_reset :-
 
 %--------------------------------------------------------------------%
 %% This predicate must be implemented by the students
-agent_init :-
+agent_init(Name) :-
     retractall( name(_)              ),
-    assert(     name(agent)          ).
+    assert(     name(Name)           ).
 
 %--------------------------------------------------------------------%
 agent(Percept, Action) :-
