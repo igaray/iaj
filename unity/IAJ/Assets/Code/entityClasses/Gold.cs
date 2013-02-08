@@ -14,8 +14,8 @@ public class Gold : EObject {
 		Gold       gold    = gameObj.GetComponent<Gold>();
 		
 		gold.weigth        = weigth;
-		gold.description   = description;
-		gold.name          = name;
+		gold._description  = description;
+		gold._name         = name;
 		
 		return gold;
 	}

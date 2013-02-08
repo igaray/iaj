@@ -5,36 +5,42 @@ using UnityEngine;
 
 public class Percept {
 	
-	public List<List<IPerceivableEntity> > elements = new List<List<IPerceivableEntity> >();
+	private List<List<IPerceivableEntity> > elements = new List<List<IPerceivableEntity> >();
+	public  string       p;
+	public  List<string> auxList;
 	
 	// the perception is created and generated here
 	public Percept(SimulationState state, int agentID) {
-		/*
+		
+		Dictionary<string,System.Object> dic;	
+		auxList = new List<string>();
+		
 		if (state.agents.ContainsKey(agentID)) {
 			state.agents[agentID].agentController.perceive(this); 
+			foreach (List<IPerceivableEntity> list in elements){			
+				foreach(IPerceivableEntity e in list){				
+					dic = e.perception();	
+					
+					foreach(KeyValuePair<string, System.Object> entry in dic){
+						//Debug.LogError(String.Format("{0}({1})", entry.Key, entry.Value.ToString())); 
+						auxList.Add(String.Format("{0}({1})", entry.Key, entry.Value.ToString())); 
+					}
+					
+				}
+			}
+			p = (new PrologList<string>(auxList)).ToString();
+			Debug.LogError(p); 
 		}
 		else {
 			Debug.LogError("Percept creation fail.");
 		}
-		*/
+		
 	}
 
 	public string toProlog() {
-		/*
-		string aux = "";
-		Hashtable dic;
+		return p + ".\r"; 
 		
-		foreach (List<IPerceivableEntity> list in elements){
-			foreach(IPerceivableEntity e in list){
-				dic = e.perception();
-				foreach(DictionaryEntry entry in dic){
-					Debug.Log(entry.Key + ": " + entry.Value); //TODO: Generar código Prolog
-				}
-			}
-		}
-		return aux; 
-		*/
-		return "percept(position(1,2,3), agents([]), objects([]), inventory([])).\r";
+		//return "percept(position(1,2,3), agents([]), objects([]), inventory([])).\r";
 	}
 	
 	public void addEntities(List<IPerceivableEntity> e){
@@ -42,5 +48,22 @@ public class Percept {
 	}
 }
 
-
+public class PrologList<T>{
+	
+	public List<T> list;
+	
+	public PrologList(List<T> l){
+		list = l;
+	}
+	
+	public override string ToString ()
+	{
+		string aux = "[";
+		foreach(T e in list){
+			aux += e.ToString() + ",";
+		}	
+		aux = aux.TrimEnd(",".ToCharArray()) + "]";
+		return aux;
+	}
+}
 

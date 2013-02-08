@@ -33,15 +33,15 @@ public class Agent : Entity {
 		Agent      agent   = gameObj.GetComponent<Agent>();
 		
 		agent.life         = lifeTotal;
-		agent.description  = description;
-		agent.name         = name;
+		agent._description = description;
+		agent._name        = name;
 		agent._delta	   = ss.delta;		
 
 						  			
 		return agent;
 	}
 	
-	void Start(){
+	public override void Start(){
 		base.Start();		
 		this._controller = this.GetComponent<RigidBodyController>();		
 		InvokeRepeating("execute", 0, _delta);
@@ -56,6 +56,7 @@ public class Agent : Entity {
 		// TEST
 		if (!_controller.moving && nodeList.Count > 1)
 			_controller.move((Vector3)(nodeList[Random.Range(0, nodeList.Count)]._node.position));	
+		//position = transform.position;
 		// TEST
 		
 	}
@@ -98,14 +99,15 @@ public class Agent : Entity {
 		this.backpack.Remove(obj);
 	}
 	
-	public override Hashtable perception(){
-		Hashtable p = base.perception();
+	public override Dictionary<string, System.Object> perception(){
+		Dictionary<string, System.Object> p = base.perception();
+		
 		p["life"]       = life;
 		p["lifeTotal"]  = lifeTotal;
 //		p["backpack"]   = backpack;		
 //		p["agentsSeen"] = perceptObjects<Agent>("agent");
 //		p["goldSeen"]   = perceptObjects<Gold> ("gold");
-
+		
 		return p;
 	}
 	

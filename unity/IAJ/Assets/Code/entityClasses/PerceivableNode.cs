@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using Pathfinding;
 using Pathfinding.Nodes;
 using UnityEngine;
@@ -13,12 +14,12 @@ public class PerceivableNode : IPerceivableEntity
 		this._node = node;
 	}
 	
-	public Hashtable perception ()
+	public Dictionary<string, System.Object> perception ()
 	{
-		Hashtable d = new Hashtable();
+		Dictionary<string, System.Object> d = new Dictionary<string, System.Object>();
 		
 		d["name"]     = _node.GetIndex(); 
-		d["position"] = (Vector3)_node.position;
+		d["position"] = Entity.Vector3ToProlog((Vector3)_node.position);
 		// TODO: agregar conexiones?
 		return d;
 	}

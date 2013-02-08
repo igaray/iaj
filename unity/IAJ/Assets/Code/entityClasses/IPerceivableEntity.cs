@@ -1,9 +1,11 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 public interface IPerceivableEntity{
 	
-	Hashtable perception();
+	Dictionary<string, Object> perception();
 }
+
 
 
