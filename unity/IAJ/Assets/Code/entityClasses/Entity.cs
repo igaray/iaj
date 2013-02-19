@@ -37,7 +37,17 @@ public abstract class Entity : MonoBehaviour, IPerceivableEntity {
 	}
 	
 	static public string Vector3ToProlog(Vector3 v){
-		return String.Format("{0}, {1}, {2}", v.x, v.y, v.z);
+		return String.Format("vector({0}, {1}, {2})", v.x, v.y, v.z);
+	}
+	
+	// cada clase que implemente esta clase tiene que sobreescribir este método
+	public virtual string toProlog ()
+	{
+		return String.Format("entity({0}, {1}, {2}, {3}, ", 
+			this._name, 
+			this._type,
+			(AstarPath.active.GetNearest(position).node as GridNode).GetIndex(),
+			Vector3ToProlog(position));
 	}
 	
 }

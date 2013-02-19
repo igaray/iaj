@@ -178,7 +178,7 @@ public class AgentConnection {
     private void sendPercept(Percept percept) {
         // convert percept to xml string
         // send it over the wire
-        streamWriter.Write(percept.toProlog());
+        streamWriter.Write(percept.ToString());
         streamWriter.Flush();
     }
 
