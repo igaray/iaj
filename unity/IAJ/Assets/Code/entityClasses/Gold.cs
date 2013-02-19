@@ -3,6 +3,10 @@ using System.Collections;
 
 public class Gold : EObject {
 	
+	public override void Start(){
+		this._type = "gold";
+	}
+	
 	public static Gold Create(	Object  prefab, 
 								Vector3 position, 
 								Engine  engine,			//this may not be necessary
@@ -18,5 +22,10 @@ public class Gold : EObject {
 		gold._name         = name;
 		
 		return gold;
+	}
+	
+	public override string toProlog(){
+		string aux = base.toProlog();
+		return aux + "])";
 	}
 }

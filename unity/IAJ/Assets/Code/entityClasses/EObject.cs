@@ -12,4 +12,9 @@ public abstract class EObject : Entity {
 		p["weigth"] = this.weigth;
 		return p;
 	}
+	
+	public override string toProlog(){
+		string aux = base.toProlog();		
+		return aux + string.Format("[[weight, {0}]", this.weigth);
+	}
 }

@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 using Pathfinding.Nodes;
 using Pathfinding;
@@ -22,7 +23,7 @@ public class Agent : Entity {
 	public  List<EObject>         backpack = new List<EObject>();
 	private List<PerceivableNode> nodeList;							// TODO: Borrar. Es para test nomás
 	
-	public static Agent Create(	Object prefab, 
+	public static Agent Create(	GameObject prefab, 
 								Vector3 position, 
 								SimulationState ss,
 								string description, 
@@ -35,7 +36,8 @@ public class Agent : Entity {
 		agent.life         = lifeTotal;
 		agent._description = description;
 		agent._name        = name;
-		agent._delta	   = ss.delta;		
+		agent._delta	   = ss.delta;
+		agent._type		   = "agent";
 
 						  			
 		return agent;
@@ -51,11 +53,9 @@ public class Agent : Entity {
 	void execute(){		
 		nodeList = this.perceptNodes();
 		
-		List<Agent> agents = this.perceptObjects<Agent>("agent");
-		
 		// TEST
 		if (!_controller.moving && nodeList.Count > 1)
-			_controller.move((Vector3)(nodeList[Random.Range(0, nodeList.Count)]._node.position));	
+			_controller.move((Vector3)(nodeList[UnityEngine.Random.Range(0, nodeList.Count)]._node.position));	
 		//position = transform.position;
 		// TEST
 		
@@ -176,10 +176,41 @@ public class Agent : Entity {
 	
 	public void perceive(Percept p){
 		
-		p.addEntities(perceptObjects<Agent>("agent").Cast<IPerceivableEntity>().ToList());
-		p.addEntities(perceptObjects<Gold> ("gold") .Cast<IPerceivableEntity>().ToList());
-		p.addEntities(perceptNodes()				.Cast<IPerceivableEntity>().ToList());
+		p.addEntitiesRange(perceptObjects<Agent>("agent").Cast<IPerceivableEntity>().ToList());
+		p.addEntitiesRange(perceptObjects<Gold> ("gold") .Cast<IPerceivableEntity>().ToList());
+		p.addEntitiesRange(perceptNodes()				 .Cast<IPerceivableEntity>().ToList());
+}
+	
+	public override string toProlog(){
+		string aux = base.toProlog();		
+		return aux + String.Format("[[life, {0}], [lifeTotal, {1}]])", this.life, this.lifeTotal);
 	}
+	
+	public string selfProperties(bool inProlog = true){
+		Building building = inBuilding();
+		string   inside   = building != null? building._name : "no";
+		string   aux;
+		if (inProlog){
+			aux = string.Format("selfProperties({0}, {1}, {2}, {3}, {4}, {5}, {6})",
+				this._name,
+	//			this.lastAction,
+	//			this.lastActionResult,
+				"todo",
+				"todo",
+				this.life,
+				this.lifeTotal,
+				new PrologList(this.backpack).toProlog(),
+				inside);
+		}
+		else{
+			throw new NotImplementedException();
+		}
+	}
+	
+	public Building inBuilding(){
+		return null; //TODO: implementar
+	}
+	
 }
 
 //Breadth first nodes

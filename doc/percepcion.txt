@@ -10,10 +10,10 @@ El nombre del nodo será el código que le otorga el módulo de pathfinding, y las 
 
 Cada entidad visible será devuelta en entity_descr/5.
 
-entiy_descr(Nombre, Tipo, Nodo, Posición, Propiedades)
+entiy(Nombre, Tipo, Nodo, Posición, Propiedades)
 
 El Nombre es el identificador unívoco de la entidad. El tipo depende actualmente del tipo interno en Unity (agent, gold, inn). Nodo es el nodo más cercano a la entidad. La posición está expresada en vector(X, Y, Z), como los nodos del terreno. Propiedades es una lista con pares, que representan [Característica, Valor]. Cada tipo de entidad tendrá características distintas.
-
+/*
 - Mochila
 
 backpack(Elementos)
@@ -25,12 +25,9 @@ Elementos será una lista con los identificadores de entidades que el agente llev
 isInBuilding(Edificio)
 
 Se devuelve sólo si el agente se encuentra dentro de un edificio. Edificio es el identificador unívoco de la entidad edificio en la que se encuentra.
+*/
 
-- lastAction(Action, Result)
+selfProperties(Nombre, UltimaAccion, ResultadoUltimaAccion, Vida, VidaTotal, Backpack, InBuilding)
 
-Devuelve la última acción realizada en Action, y su Resultado en Result
-
-selfProperties(Nombre, UltimaAccion, ResultadoUltimaAccion, Vida, VidaTotal)
-
-Devuelve características del propio agente. El nombre, la última acción, su resultado, la vida y la vida total
+Devuelve características del propio agente. El nombre, la última acción, su resultado, la vida y la vida total. Backpack tiene una lista con los identificadores de las entidades que el agente lleva en su mochila. InBuilding mantiene "no" si el agente no se encuentra en un edificio, y sino devuelve el identificador del edificio en el que el agente se encuentra.
 

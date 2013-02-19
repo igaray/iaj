@@ -4,7 +4,9 @@ using System.Collections.Generic;
 
 public interface IPerceivableEntity{
 	
-	Dictionary<string, Object> perception();
+	//Dictionary<string, Object> perception();
+	
+	string toProlog();
 }
 
 
