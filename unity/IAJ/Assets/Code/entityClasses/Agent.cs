@@ -188,7 +188,7 @@ public class Agent : Entity {
 	
 	public string selfProperties(bool inProlog = true){
 		Building building = inBuilding();
-		string   inside   = building != null? building._name : "no";
+		string   inside   = building != null ? building._name : "no";
 		string   aux;
 		if (inProlog){
 			aux = string.Format("selfProperties({0}, {1}, {2}, {3}, {4}, {5}, {6})",
@@ -205,6 +205,7 @@ public class Agent : Entity {
 		else{
 			throw new NotImplementedException();
 		}
+		return aux;
 	}
 	
 	public Building inBuilding(){

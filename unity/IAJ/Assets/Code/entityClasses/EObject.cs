@@ -11,6 +11,7 @@ public abstract class EObject : Entity {
 		Dictionary<string, System.Object> p = base.perception();
 		p["weigth"] = this.weigth;
 		return p;
+		
 	}
 	
 	public override string toProlog(){
