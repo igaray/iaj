@@ -37,14 +37,34 @@ public class PerceivableNode : IPerceivableEntity
 	public List<int> connections(){
 		Node[] nodes = this._node.connections;
 		List<int> indexes = new List<int>();
-		foreach (int node in this){
-			indexes.Add(node);
+		foreach (Node node in this){
+			indexes.Add(node.GetNodeIndex());
 		}
 		return indexes;
 	}
+//	
+//	// devuelve un iterador para los vecinos del nodo
+//	public IEnumerator<int> GetEnumerator(){
+//		GridGraph graph            = AstarPath.active.astarData.gridGraph;
+//		Node[]    nodes            = graph.nodes;
+//		int[]     neighbourOffsets = graph.neighbourOffsets;
+//		Node      aux;
+//		int       index;
+//		
+//		for (int i = 0; i < 8; i++){ //las 8 conexiones posibles de cada nodo
+//			index = _node.GetIndex();
+//
+//			if(_node.GetConnection(i)){
+//				aux = nodes[index + neighbourOffsets[i]];
+//				if (aux.walkable){	
+//					yield return aux.GetNodeIndex();
+//				}
+//			}
+//		}
+//	}
 	
-	// devuelve un iterador para los vecinos del nodo
-	public IEnumerator<int> GetEnumerator(){
+		// devuelve un iterador para los vecinos del nodo
+	public IEnumerator<Node> GetEnumerator(){
 		GridGraph graph            = AstarPath.active.astarData.gridGraph;
 		Node[]    nodes            = graph.nodes;
 		int[]     neighbourOffsets = graph.neighbourOffsets;
@@ -57,7 +77,7 @@ public class PerceivableNode : IPerceivableEntity
 			if(_node.GetConnection(i)){
 				aux = nodes[index + neighbourOffsets[i]];
 				if (aux.walkable){	
-					yield return aux.GetNodeIndex();
+					yield return aux;
 				}
 			}
 		}

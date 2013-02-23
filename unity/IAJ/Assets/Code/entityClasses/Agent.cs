@@ -127,44 +127,61 @@ public class Agent : Entity {
 		return aux;
 	}
 	
+//	private List<PerceivableNode> perceptNodes(){
+//		//GridGraph graph = AstarPath.active.astarData.gridGraph;
+//		GridNode gridNode = AstarPath.active.GetNearest(transform.position).node as GridNode;
+//		
+//		List   <PerceivableNode> connections = new List   <PerceivableNode>();
+//		Queue  <BFNode>          q           = new Queue  <BFNode>         ();
+//		HashSet<GridNode>        visited     = new HashSet<GridNode>       ();
+//				
+//		//Breadth First Search
+//		BFNode t = new BFNode(0, gridNode);
+//		q.Enqueue(t);
+//
+//		while (q.Count > 0){
+//			t = q.Dequeue();
+//			connections.Add(new PerceivableNode(t.node));
+//			if (t.depth < _depthOfSight){ //si no está en el límite, agrego nodos
+//				foreach(Node node in t.node){
+//					if (!(visited.Contains((GridNode)(node))) && //famoso if de reglón de ancho, warpeado
+//						isVisibleNode(node) &&
+//						node.walkable)
+//					{	
+//						visited.Add((GridNode)node);
+//						q.Enqueue(new BFNode(t.depth + 1, (GridNode)node));
+//					}
+//				}
+//			}
+//		}
+//		return connections;		
+//	}
+	
 	private List<PerceivableNode> perceptNodes(){
 		//GridGraph graph = AstarPath.active.astarData.gridGraph;
-		GridNode  node  = AstarPath.active.GetNearest(transform.position).node as GridNode;
-		Node[]    nodes = _graph.nodes;
-		int       index = node.GetIndex();
-		
-		int[] neighbourOffsets = _graph.neighbourOffsets;
-		
+		GridNode gridNode = AstarPath.active.GetNearest(transform.position).node as GridNode;
 		List   <PerceivableNode> connections = new List   <PerceivableNode>();
 		Queue  <BFNode>          q           = new Queue  <BFNode>         ();
-		HashSet<GridNode>        visited     = new HashSet<GridNode>       ();
-				
+		HashSet<Node>            visited     = new HashSet<Node>           ();
 		//Breadth First Search
-		BFNode t = new BFNode(0, node);
+		BFNode t = new BFNode(0, gridNode);
 		q.Enqueue(t);
-		Node aux;
-		
 		while (q.Count > 0){
 			t = q.Dequeue();
-			connections.Add(new PerceivableNode(t.node));
-			if (t.depth < _depthOfSight){ //si no está en el límite, agrego nodos
-				for (int i = 0; i < 8; i++){ //las 8 conexiones posibles de cada nodo
-					index = t.node.GetIndex();
-
-					if(t.node.GetConnection(i)){
-						aux = nodes[index + neighbourOffsets[i]];
-						if (!(visited.Contains((GridNode)(aux))) && //famoso if de reglón de ancho, warpeado
-							isVisibleNode(aux) &&
-							aux.walkable)
-						{	
-							visited.Add((GridNode)aux);
-							q.Enqueue(new BFNode(t.depth + 1, (GridNode)aux));
-						}
+			connections.Add(t.node);
+			if (t.depth < _depthOfSight){ //si no está en el límite, agr
+				foreach(Node node in t.node){
+					if (!(visited.Contains(node)) && //famoso if de reglón de ancho, warpeado
+						isVisibleNode(node) &&
+						node.walkable)
+					{	
+						visited.Add(node);
+						q.Enqueue(new BFNode(t.depth + 1, node as GridNode));
 					}
 				}
 			}
 		}
-		return connections;		
+		return connections;	
 	}
 	
 	//check if the node is in a visible distance
@@ -216,11 +233,16 @@ public class Agent : Entity {
 
 //Breadth first nodes
 class BFNode{
-	public GridNode node;
-	public int depth;
+	public PerceivableNode node;
+	public int             depth;
+	
+	public BFNode(int depth, PerceivableNode node){
+		this.node  = node;
+		this.depth = depth;
+	}
 	
 	public BFNode(int depth, GridNode node){
-		this.node  = node;
+		this.node  = new PerceivableNode(node);
 		this.depth = depth;
 	}
 }
