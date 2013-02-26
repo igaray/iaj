@@ -9,7 +9,7 @@ public class Gold : EObject {
 	
 	public static Gold Create(	Object  prefab, 
 								Vector3 position, 
-								Engine  engine,			//this may not be necessary
+								IEngine engine,			//this may not be necessary
 								string  description, 
 								string  name, 
 								int 	weigth) {

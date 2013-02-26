@@ -10,7 +10,7 @@ using System.Threading;
 using System.Xml;
 
 /******************************************************************************/
-public class SimulationEngineComponentScript : MonoBehaviour {
+public class SimulationEngineComponentScript : MonoBehaviour{
 
     // SIMULATION
     private SimulationState     ss;
@@ -21,6 +21,8 @@ public class SimulationEngineComponentScript : MonoBehaviour {
     public  Vector2             scrollPosition;
     public  string              outputText = "";
 	public  GameObject			agentPrefab;
+	
+
     
     // Use this for initialization
     void Start () {

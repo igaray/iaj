@@ -10,7 +10,7 @@ using System.Threading;
 using System.Xml;
 
 // Runs within Unity3D
-public class SimulationState {
+public class SimulationState : IEngine{
 
     public Dictionary<string, string>   config;
     public Dictionary<string, int>      agentIDs; // nombres -> ids
@@ -20,7 +20,12 @@ public class SimulationState {
     public MailBox<PerceptRequest>      perceptRequests;
 	public MailBox<InstantiateRequest>  instantiateRequests;
 	public MailBox<string>              stdout;
-	public float						delta = 0.1f;
+	public float						_delta
+	{
+		get;
+		set;
+	}
+		
 
     public SimulationState(string ConfigurationFilePath) {
         config               = new Dictionary<string, string>();
@@ -31,6 +36,7 @@ public class SimulationState {
         perceptRequests      = new MailBox<PerceptRequest>(true);
 		instantiateRequests  = new MailBox<InstantiateRequest>(true);
         stdout               = new MailBox<string>(true);
+		_delta               = 0.1f;
 
         /*
         XmlDocument document = new XmlDocument();

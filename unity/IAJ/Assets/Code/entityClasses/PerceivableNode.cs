@@ -14,17 +14,6 @@ public class PerceivableNode : IPerceivableEntity
 		this._node = node;
 	}
 	
-	//TODO: revisar si esto va
-//	public Dictionary<string, System.Object> perception ()
-//	{
-//		Dictionary<string, System.Object> d = new Dictionary<string, System.Object>();
-//		
-//		d["name"]     = _node.GetIndex(); 
-//		d["position"] = Entity.Vector3ToProlog((Vector3)_node.position);
-//		// TODO: agregar conexiones?
-//		return d;
-//	}
-	
 	public string toProlog(){
 		
 		List<int> neighbors = connections();
@@ -42,32 +31,12 @@ public class PerceivableNode : IPerceivableEntity
 		}
 		return indexes;
 	}
-//	
-//	// devuelve un iterador para los vecinos del nodo
-//	public IEnumerator<int> GetEnumerator(){
-//		GridGraph graph            = AstarPath.active.astarData.gridGraph;
-//		Node[]    nodes            = graph.nodes;
-//		int[]     neighbourOffsets = graph.neighbourOffsets;
-//		Node      aux;
-//		int       index;
-//		
-//		for (int i = 0; i < 8; i++){ //las 8 conexiones posibles de cada nodo
-//			index = _node.GetIndex();
-//
-//			if(_node.GetConnection(i)){
-//				aux = nodes[index + neighbourOffsets[i]];
-//				if (aux.walkable){	
-//					yield return aux.GetNodeIndex();
-//				}
-//			}
-//		}
-//	}
 	
-		// devuelve un iterador para los vecinos del nodo
+	// devuelve un iterador para los vecinos del nodo
 	public IEnumerator<Node> GetEnumerator(){
 		GridGraph graph            = AstarPath.active.astarData.gridGraph;
 		Node[]    nodes            = graph.nodes;
-		int[]     neighbourOffsets = graph.neighbourOffsets;
+		int []    neighbourOffsets = graph.neighbourOffsets;
 		Node      aux;
 		int       index;
 		

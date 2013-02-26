@@ -9,7 +9,7 @@ public abstract class Entity : MonoBehaviour, IPerceivableEntity {
 
 	public string    _description;
 	public string    _type;
-	//public Engine    _engine;
+	public IEngine   _engine;
 	public GridGraph _graph;
 	public string    _name;
 	public Vector3   position;

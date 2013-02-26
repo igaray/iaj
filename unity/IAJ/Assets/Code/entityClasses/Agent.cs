@@ -25,7 +25,7 @@ public class Agent : Entity {
 	
 	public static Agent Create(	GameObject prefab, 
 								Vector3 position, 
-								SimulationState ss,
+								IEngine se,
 								string description, 
 								string name, 
 								int lifeTotal) 
@@ -36,7 +36,7 @@ public class Agent : Entity {
 		agent.life         = lifeTotal;
 		agent._description = description;
 		agent._name        = name;
-		agent._delta	   = ss.delta;
+		agent._delta	   = se._delta;
 		agent._type		   = "agent";
 
 						  			
