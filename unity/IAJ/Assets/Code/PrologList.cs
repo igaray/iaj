@@ -24,10 +24,6 @@ public class PrologList : IPerceivableEntity{
 		return aux;
 	}
 	
-//	public PrologList addPair(string key, string elem){
-//		list.Add(new PrologList(new List<string>().Add(String.Format("[{0}, {1}]", key, elem))));
-//	}
-	
 	static public string AtomList<T>(List<T> list){
 			
 		string aux = "[";

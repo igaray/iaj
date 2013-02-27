@@ -32,6 +32,15 @@ public class PerceivableNode : IPerceivableEntity
 		return indexes;
 	}
 	
+	public static List<int> connections(GridNode node){
+		Node[] nodes = node.connections;
+		List<int> indexes = new List<int>();
+		foreach (Node n in new PerceivableNode(node)){
+			indexes.Add(n.GetNodeIndex());
+		}
+		return indexes;
+	}
+	
 	// devuelve un iterador para los vecinos del nodo
 	public IEnumerator<Node> GetEnumerator(){
 		GridGraph graph            = AstarPath.active.astarData.gridGraph;

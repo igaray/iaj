@@ -75,6 +75,7 @@ public class SimulationState : IEngine{
 
     public bool executableAction(Action action) {
         bool result = false;
+		Agent agent = agents[action.agentID].agentController;
         switch (action.type) {
             //case ActionType.: {
             //    result = ;
@@ -85,9 +86,7 @@ public class SimulationState : IEngine{
                 break;
             }
             case ActionType.move: {
-                // TODO
-                // check if the position the agent wants to move to is adjacent
-                result = false;
+                result = agent.movePreConf(action.targetID);
                 break;
             }
             case ActionType.attack: {
@@ -113,13 +112,13 @@ public class SimulationState : IEngine{
     }
 
     public void applyActionEffects(Action action) {
+		Agent agent = agents[action.agentID].agentController;
         switch (action.type) {
             case ActionType.noop: {
                 break;
             }
             case ActionType.move: {
-                // TODO
-                // change the agent's position
+                agent.movePosCond(action.targetID);
                 break;
             }
             case ActionType.attack: {

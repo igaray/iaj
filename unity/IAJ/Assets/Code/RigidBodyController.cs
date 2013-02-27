@@ -24,7 +24,7 @@ public class RigidBodyController : MonoBehaviour {
   
 	void Awake () {
 	    rigidbody.freezeRotation = true;
-	    rigidbody.useGravity = false;
+	    rigidbody.useGravity     = false;
 	}
  
 	void FixedUpdate () {
@@ -35,20 +35,22 @@ public class RigidBodyController : MonoBehaviour {
 				
 				// Calculate how fast we should be moving
 				
-		        Vector3 targetVelocity = (target - transform.position).normalized;
-		        targetVelocity = transform.TransformDirection(targetVelocity);
-		        targetVelocity *= _speed;
+		        Vector3 targetVelocity  = (target - transform.position).normalized;
+		        targetVelocity          = transform.TransformDirection(targetVelocity);
+		        targetVelocity         *= _speed;
 	 
 		        // Apply a force that attempts to reach our target velocity
-		        Vector3 velocity = rigidbody.velocity;
+		        Vector3 velocity       = rigidbody.velocity;
 		        Vector3 velocityChange = (targetVelocity - velocity);
 		        velocityChange.x = Mathf.Clamp(velocityChange.x, -maxVelocityChange, maxVelocityChange);
 		        velocityChange.z = Mathf.Clamp(velocityChange.z, -maxVelocityChange, maxVelocityChange);
 		        velocityChange.y = 0;
 		        rigidbody.AddForce(velocityChange, ForceMode.VelocityChange);
 			}
- 			else
+ 			else{
 				moving = false;
+				_agent.stoppedMoving();
+			}
 	    }
  
 	    // We apply gravity manually for more tuning control
@@ -62,7 +64,7 @@ public class RigidBodyController : MonoBehaviour {
 	}
 	
 	public void move(Vector3 target){
-		moving = true;
+		moving      = true;
 		this.target = target;
 	}
  

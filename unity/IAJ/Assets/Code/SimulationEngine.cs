@@ -206,7 +206,10 @@ public class Action {
                 }
                 if (type_str == "move") {
                     this.type     = ActionType.move;
-                    this.position = new Position(document.SelectSingleNode("/action/position").Value);
+                    //this.position = new Position(document.SelectSingleNode("/action/position").Value);
+					
+					//Acá no me anduvo Value, y si InnerText. No sé por qué
+					this.targetID = Convert.ToInt32(document.SelectSingleNode("/action/position").InnerText);
                 }
                 if (type_str == "attack") {
                     this.type     = ActionType.attack;
@@ -260,7 +263,9 @@ public class AgentState {
         this.actions           = ss.readyActionQueue;
         this.results           = new MailBox<ActionResult>(false);
         this.percepts          = new MailBox<Percept>(false);
-        this.agentController   = Agent.Create(prefab, new Vector3(20, 23, 1), ss, "", name, 100);        
+        this.agentController   = Agent.Create(prefab, new Vector3(20, 2, 1), ss, "", name, 100);  
+		
+		this.agentController.setCallback(results.Send);
 	}
 
     public String toString() {

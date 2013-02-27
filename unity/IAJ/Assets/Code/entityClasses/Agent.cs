@@ -15,13 +15,15 @@ public class Agent : Entity {
 	private float _nodeSize = 2; 		// size of the node in the world measure
 										// Hardcodeado. Traté de hacerlo andar dinámicamente, pero no pude.
 										// Es el mismo número que el node size definido en el objeto A*, por IDE
-	private float _delta;   			// time between ticks of "simulation"
+	private float _delta = 0.1f;   			// time between ticks of "simulation"
 	public  int   life;
 	public  int   _depthOfSight;
 		
 	private RigidBodyController   _controller;	
-	public  List<EObject>         backpack = new List<EObject>();
 	private List<PerceivableNode> nodeList;							// TODO: Borrar. Es para test nomás
+	public  List<EObject>         backpack = new List<EObject>();
+	public  delegate void ActionFinished(ActionResult result);
+	private ActionFinished actionFinished;
 	
 	public static Agent Create(	GameObject prefab, 
 								Vector3 position, 
@@ -38,15 +40,18 @@ public class Agent : Entity {
 		agent._name        = name;
 		agent._delta	   = se._delta;
 		agent._type		   = "agent";
-
 						  			
 		return agent;
 	}
 	
 	public override void Start(){
 		base.Start();		
-		this._controller = this.GetComponent<RigidBodyController>();		
+		this._controller = this.GetComponent<RigidBodyController>();	
 		InvokeRepeating("execute", 0, _delta);
+	}
+	
+	public void setCallback(ActionFinished s){
+		actionFinished = s;
 	}
 	
 	// esto se ejecuta en cada ciclo de "simulación"
@@ -54,20 +59,33 @@ public class Agent : Entity {
 		nodeList = this.perceptNodes();
 		
 		// TEST
-		if (!_controller.moving && nodeList.Count > 1)
-			_controller.move((Vector3)(nodeList[UnityEngine.Random.Range(0, nodeList.Count)]._node.position));	
+//		if (!_controller.moving && nodeList.Count > 1){
+//			GridNode node = nodeList[UnityEngine.Random.Range(0, nodeList.Count)]._node;
+//			_controller.move((Vector3)node.position);	
+//			Debug.Log(movePreConf(node.GetIndex()));
+//		}
 		//position = transform.position;
 		// TEST
 		
-	}
-	
+	}	
 		
-	public void moveToNode(int node){
-		_controller.move((Vector3)(nodeList[node]._node.position));	
+	public bool movePreConf(int node){
+		Node actualNode = AstarPath.active.GetNearest(transform.position).node as GridNode;
+//		return PerceivableNode.connections(actualNode as GridNode).Contains(node);
+		return true;
 	}
 	
-	public void moveToNode(Vector3 target){
+	public void movePosCond(int node){
+		_controller.move((Vector3)(AstarPath.active.graphs[0].nodes[node].position));	
+	}
+	
+	// posiblemente innecesario
+	public void moveToPosition(Vector3 target){
 		_controller.move(target);	
+	}
+	
+	public void stoppedMoving(){
+		actionFinished(ActionResult.failure);
 	}
 	
 	public void subLife(int dif) {
@@ -97,98 +115,6 @@ public class Agent : Entity {
 	public void drop(EObject obj) {
 
 		this.backpack.Remove(obj);
-	}
-	
-	public override Dictionary<string, System.Object> perception(){
-		Dictionary<string, System.Object> p = base.perception();
-		
-		p["life"]       = life;
-		p["lifeTotal"]  = lifeTotal;
-//		p["backpack"]   = backpack;		
-//		p["agentsSeen"] = perceptObjects<Agent>("agent");
-//		p["goldSeen"]   = perceptObjects<Gold> ("gold");
-		
-		return p;
-	}
-	
-	private List<ObjectType> perceptObjects<ObjectType>(string type, string layer = "perception") 
-		where ObjectType : Component // cuánta magia
-									 // acá restrinjo el tipo pasado por parámetro
-		{
-		Collider[] colliders = 
-			Physics.OverlapSphere(this.transform.position, _depthOfSight,
-				1 << LayerMask.NameToLayer(layer)); // usa mascaras, con el << agregas con BITWISE-OR
-		List<ObjectType> aux = new List<ObjectType>();
-		
-    	foreach (Collider hit in colliders) {		
-			if (hit.tag == type)
-				aux.Add(hit.gameObject.GetComponent<ObjectType>());
-    	}
-		return aux;
-	}
-	
-//	private List<PerceivableNode> perceptNodes(){
-//		//GridGraph graph = AstarPath.active.astarData.gridGraph;
-//		GridNode gridNode = AstarPath.active.GetNearest(transform.position).node as GridNode;
-//		
-//		List   <PerceivableNode> connections = new List   <PerceivableNode>();
-//		Queue  <BFNode>          q           = new Queue  <BFNode>         ();
-//		HashSet<GridNode>        visited     = new HashSet<GridNode>       ();
-//				
-//		//Breadth First Search
-//		BFNode t = new BFNode(0, gridNode);
-//		q.Enqueue(t);
-//
-//		while (q.Count > 0){
-//			t = q.Dequeue();
-//			connections.Add(new PerceivableNode(t.node));
-//			if (t.depth < _depthOfSight){ //si no está en el límite, agrego nodos
-//				foreach(Node node in t.node){
-//					if (!(visited.Contains((GridNode)(node))) && //famoso if de reglón de ancho, warpeado
-//						isVisibleNode(node) &&
-//						node.walkable)
-//					{	
-//						visited.Add((GridNode)node);
-//						q.Enqueue(new BFNode(t.depth + 1, (GridNode)node));
-//					}
-//				}
-//			}
-//		}
-//		return connections;		
-//	}
-	
-	private List<PerceivableNode> perceptNodes(){
-		//GridGraph graph = AstarPath.active.astarData.gridGraph;
-		GridNode gridNode = AstarPath.active.GetNearest(transform.position).node as GridNode;
-		List   <PerceivableNode> connections = new List   <PerceivableNode>();
-		Queue  <BFNode>          q           = new Queue  <BFNode>         ();
-		HashSet<Node>            visited     = new HashSet<Node>           ();
-		//Breadth First Search
-		BFNode t = new BFNode(0, gridNode);
-		q.Enqueue(t);
-		while (q.Count > 0){
-			t = q.Dequeue();
-			connections.Add(t.node);
-			if (t.depth < _depthOfSight){ //si no está en el límite, agr
-				foreach(Node node in t.node){
-					if (!(visited.Contains(node)) && //famoso if de reglón de ancho, warpeado
-						isVisibleNode(node) &&
-						node.walkable)
-					{	
-						visited.Add(node);
-						q.Enqueue(new BFNode(t.depth + 1, node as GridNode));
-					}
-				}
-			}
-		}
-		return connections;	
-	}
-	
-	//check if the node is in a visible distance
-	private bool isVisibleNode(Node node){
-		
-		return (new Int3(transform.position) -
-				node.position).worldMagnitude < _depthOfSight * _nodeSize;
 	}
 	
 	public void perceive(Percept p){
@@ -228,7 +154,56 @@ public class Agent : Entity {
 	public Building inBuilding(){
 		return null; //TODO: implementar
 	}
+		
+	private List<ObjectType> perceptObjects<ObjectType>(string type, string layer = "perception") 
+		where ObjectType : Component // cuánta magia
+									 // acá restrinjo el tipo pasado por parámetro
+		{
+		Collider[] colliders = 
+			Physics.OverlapSphere(this.transform.position, _depthOfSight,
+				1 << LayerMask.NameToLayer(layer)); // usa mascaras, con el << agregas con BITWISE-OR
+		List<ObjectType> aux = new List<ObjectType>();
+		
+    	foreach (Collider hit in colliders) {		
+			if (hit.tag == type)
+				aux.Add(hit.gameObject.GetComponent<ObjectType>());
+    	}
+		return aux;
+	}
 	
+	private List<PerceivableNode> perceptNodes(){
+		//GridGraph graph = AstarPath.active.astarData.gridGraph;
+		GridNode gridNode = AstarPath.active.GetNearest(transform.position).node as GridNode;
+		List   <PerceivableNode> connections = new List   <PerceivableNode>();
+		Queue  <BFNode>          q           = new Queue  <BFNode>         ();
+		HashSet<Node>            visited     = new HashSet<Node>           ();
+		//Breadth First Search
+		BFNode t = new BFNode(0, gridNode);
+		q.Enqueue(t);
+		while (q.Count > 0){
+			t = q.Dequeue();
+			connections.Add(t.node);
+			if (t.depth < _depthOfSight){ //si no está en el límite, agr
+				foreach(Node node in t.node){
+					if (!(visited.Contains(node)) && //famoso if de reglón de ancho, warpeado
+						isVisibleNode(node) &&
+						node.walkable)
+					{	
+						visited.Add(node);
+						q.Enqueue(new BFNode(t.depth + 1, node as GridNode));
+					}
+				}
+			}
+		}
+		return connections;	
+	}
+	
+	//check if the node is in a visible distance
+	private bool isVisibleNode(Node node){
+		
+		return (new Int3(transform.position) -
+				node.position).worldMagnitude < _depthOfSight * _nodeSize;
+	}
 }
 
 //Breadth first nodes
