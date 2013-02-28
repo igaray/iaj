@@ -165,5 +165,5 @@ agent(Percept, Action) :-
     write('AGENT: thinking...'), nl,
 	findall(node(Name, Pos, Connections), member(node(Name, Pos, Connections), Percept), Nodes),
 	random_member(node(Name, _, _), Nodes),
-    sleep(1),
+    %sleep(1),
     Action = action(move, [Name]).

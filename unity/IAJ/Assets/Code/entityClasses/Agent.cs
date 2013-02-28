@@ -85,7 +85,7 @@ public class Agent : Entity {
 	}
 	
 	public void stoppedMoving(){
-		actionFinished(ActionResult.failure);
+		actionFinished(ActionResult.success);
 	}
 	
 	public void subLife(int dif) {
