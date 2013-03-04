@@ -232,6 +232,7 @@ public class Action {
     }
 }
 
+//TODO: revisar si esto va
 public class ObjectState {
     
     public Position position;

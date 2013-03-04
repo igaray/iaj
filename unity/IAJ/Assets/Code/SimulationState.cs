@@ -12,30 +12,53 @@ using System.Xml;
 // Runs within Unity3D
 public class SimulationState : IEngine{
 
-    public Dictionary<string, string>   config;
-    public Dictionary<string, int>      agentIDs; // nombres -> ids
-    public Dictionary<int, AgentState>  agents;   // ids -> estado interno del agente
-    public Dictionary<int, ObjectState> objects;
-    public MailBox<Action>              readyActionQueue;
-    public MailBox<PerceptRequest>      perceptRequests;
-	public MailBox<InstantiateRequest>  instantiateRequests;
-	public MailBox<string>              stdout;
-	public float						_delta
+    public  Dictionary<string, string>   config;
+    public  Dictionary<string, int>      agentIDs; // nombres -> ids
+    public  Dictionary<int, AgentState>  agents;   // ids -> estado interno del agente
+//    public Dictionary<int, ObjectState> objects;
+    public  MailBox<Action>              readyActionQueue;
+    public  MailBox<PerceptRequest>      perceptRequests;
+	public  MailBox<InstantiateRequest>  instantiateRequests;
+	public  MailBox<string>              stdout;
+	public  GameObject					 goldPrefab;
+	private float	   					 delta;
+	private Dictionary <String, Gold>	 coinsIn;
+	public  IDictionary<String, Gold>	 coins
 	{
-		get;
-		set;
+		get
+		{
+			return coinsIn;
+		}
+		set
+		{
+			coinsIn = value as Dictionary <String, Gold>;
+		}
+	}
+	
+	public  float   				     _delta
+	{
+		get
+		{
+			return delta;
+		}
+		set
+		{
+			delta = value;
+		}
 	}
 		
 
-    public SimulationState(string ConfigurationFilePath) {
+    public SimulationState(string ConfigurationFilePath, GameObject gold = null) {
         config               = new Dictionary<string, string>();
 		agentIDs             = new Dictionary<string, int>();
 		agents               = new Dictionary<int, AgentState>();
-        objects              = new Dictionary<int, ObjectState>();
+        //objects              = new Dictionary<int, ObjectState>();
+		coins				 = new Dictionary <String, Gold>();
         readyActionQueue     = new MailBox<Action>(true);
         perceptRequests      = new MailBox<PerceptRequest>(true);
 		instantiateRequests  = new MailBox<InstantiateRequest>(true);
         stdout               = new MailBox<string>(true);
+		goldPrefab 			 = gold;
 		_delta               = 0.1f;
 
         /*
@@ -145,4 +168,27 @@ public class SimulationState : IEngine{
             action.actionID, 
             action.type));
     }
+	
+	// this might not be necessary
+	public void initializeCoins(){
+		
+		coins["gold1"]  = Gold.Create (goldPrefab,  new Vector3(6,  0, 15), this, "", "gold1",  2);
+		coins["gold2"]  = Gold.Create (goldPrefab,  new Vector3(22, 0, 4 ), this, "", "gold2",  2);
+		coins["gold3"]  = Gold.Create (goldPrefab,  new Vector3(27, 0, 15), this, "", "gold3",  2);
+		coins["gold4"]  = Gold.Create (goldPrefab,  new Vector3(2,  0, 4 ), this, "", "gold4",  2);
+		coins["gold5"]  = Gold.Create (goldPrefab,  new Vector3(5,  0, 22), this, "", "gold5",  2);
+		coins["gold6"]  = Gold.Create (goldPrefab,  new Vector3(26, 0, 10), this, "", "gold6",  2);
+		coins["gold7"]  = Gold.Create (goldPrefab,  new Vector3(12, 0, 18), this, "", "gold7",  2);
+		coins["gold8"]  = Gold.Create (goldPrefab,  new Vector3(12, 0, 18), this, "", "gold8",  2);
+		coins["gold9"]  = Gold.Create (goldPrefab,  new Vector3(26, 0, 6 ), this, "", "gold9",  2);
+		coins["gold10"] = Gold.Create (goldPrefab,  new Vector3(11, 0, 4 ), this, "", "gold10", 2);
+		
+	}
+	
+	public void addGold(Gold gold){
+		
+		string name = "gold" + coins.Count;
+		gold._name  = name;
+		coins[name] = gold;
+	}
 }

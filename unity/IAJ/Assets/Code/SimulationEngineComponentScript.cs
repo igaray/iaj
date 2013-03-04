@@ -10,23 +10,29 @@ using System.Threading;
 using System.Xml;
 
 /******************************************************************************/
-public class SimulationEngineComponentScript : MonoBehaviour{
+public class SimulationEngineComponentScript : MonoBehaviour, IEngineComponent{
 
     // SIMULATION
-    private SimulationState     ss;
-    private SimulationEngine    se;
+    private SimulationState  ss;
+    private SimulationEngine se;
 
     // UNITY GUI
-    public  GUISkin             mySkin;
-    public  Vector2             scrollPosition;
-    public  string              outputText = "";
-	public  GameObject			agentPrefab;
-	
+    public  GUISkin          mySkin;
+    public  Vector2          scrollPosition;
+    public  string           outputText = "";
+	public  GameObject		 agentPrefab, goldPrefab;
+	public  IEngine		  	 engine
+	{
+		get
+		{
+			return ss;
+		}
+	}
 
     
     // Use this for initialization
-    void Start () {
-        ss = new SimulationState("C:\\config.xml");
+    void Awake () {
+        ss = new SimulationState("C:\\config.xml", goldPrefab);
         se = new SimulationEngine(ss);
 
         InvokeRepeating( "DoWork", 0, 0.1f );
