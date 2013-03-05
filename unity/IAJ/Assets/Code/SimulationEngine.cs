@@ -170,7 +170,7 @@ public class Action {
     public string     actionID = "0"; // ID of the action, provided by agent.
     public int        agentID  = 0;   // ID of the agent performing the action.
     public int        targetID = 0;   // ID of an agent that is the recipient of the action.
-    public int        objectID = 0;
+    public string     objectID = "";
     public int        duration = 0;
     public Position   position;
 
@@ -217,11 +217,12 @@ public class Action {
                 }
                 if (type_str == "pickup") {
                     this.type     = ActionType.pickup;
-                    this.objectID = Convert.ToInt32(document.SelectSingleNode("/action/object/id").Value);
+                    this.objectID = document.SelectSingleNode("/action/object/id").InnerText;
+					
                 }
                 if (type_str == "drop") {
-                    this.type  = ActionType.drop;
-                    this.objectID = Convert.ToInt32(document.SelectSingleNode("/action/object/id").Value);
+                    this.type     = ActionType.drop;
+                    this.objectID = document.SelectSingleNode("/action/object/id").InnerText;
                 }
             }
             catch (System.Xml.XmlException) {

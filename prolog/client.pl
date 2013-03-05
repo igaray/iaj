@@ -121,10 +121,10 @@ action_to_xml(action(attack, [Agent]), ID, XML) :-
     swritef(XML, '<action><id>%w</id><type>attack</type><agent><id>%w</id></agent></action>', [ID, Agent]),
     !.
 action_to_xml(action(pickup, [Object]), ID, XML) :-
-    swritef(XML, '<action><id>%w</id><type>pickup</type><agent><id>%w</id></agent></action>', [ID, Object]),
+    swritef(XML, '<action><id>%w</id><type>pickup</type><object><id>%w</id></object></action>', [ID, Object]),
     !.
 action_to_xml(action(drop, [Object]), ID, XML) :-
-    swritef(XML, '<action><id>%w</id><type>drop</type><agent><id>%w</id></agent></action>', [ID, Object]),
+    swritef(XML, '<action><id>%w</id><type>drop</type><object><id>%w</id></object></action>', [ID, Object]),
     !.
 action_to_xml(_, _, _) :-
     write('CONNECTION ERROR: Invalid action.'), nl,
@@ -166,18 +166,30 @@ agent(Percept, Action) :-
 	plan(Percept, Action).
 	
 %% The agent is in the same node as the gold
-% plan(Percept, action(pickup, [Name]):-
-	% name(Self),
-	% member(entity(Name, gold, Node, _P, _Prop), Percept),
-	% member(entity(Self, agent, Node, _, _), Percept),
-	% !.
+plan(Percept, action(pickup, [Name])):-
+	name(Self),
+	member(entity(Name, gold, Node, _P, _Prop), Percept),
+	member(entity(Self, agent, Node, _, _), Percept),
+	!.
 
 %% The agent sees a gold, and moves near it
 plan(Percept, action(move, [Node])):-
+	name(Self),
+	member(entity(Self, agent, ActualNode, _, _), Percept),
 	member(entity(_Name, gold, Node, _P, _Prop), Percept),
+	member(node(Node, _Pos, Connections), Percept), 
+	member(ActualNode, Connections),
 	!.
 
 %% The agent moves randomly
 plan(Percept, action(move, [Node])):-
-	findall(node(Name, Pos, Connections), member(node(Name, Pos, Connections), Percept), Nodes),
+	name(Self),
+	member(entity(Self, agent, ActualNode, _, _), Percept),
+	findall(
+		node(Name, Pos, Connections), 
+		(
+			member(node(Name, Pos, Connections), Percept), 
+			member(ActualNode, Connections)
+		),
+		Nodes),
 	random_member(node(Node, _, _), Nodes).

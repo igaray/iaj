@@ -132,7 +132,7 @@ public class SimulationState : IEngine{
             case ActionType.pickup: {
                 // TODO
                 // check if the object the agent wants to pick up is in range
-                result = false;
+                result = agent.pickupPreCon(coins[action.objectID]);
                 break;
             }
             case ActionType.drop: {
@@ -161,9 +161,7 @@ public class SimulationState : IEngine{
                 break;
             }
             case ActionType.pickup: {
-                // TODO
-                // add the object to the agent's inventory
-                // update's the object's position
+				agent.pickupPosCon(coins[action.objectID]);
                 break;
             }
             case ActionType.drop: {

@@ -199,7 +199,7 @@ public class AgentConnection {
             action = new Action(simulationState, agentState.agentID, message);
         }
         catch (Exception e) {
-            Debug.LogError("Error in received action." + e.ToString());
+            Debug.LogError("Error in received action.\n" + e.ToString());
         } 
     }
 

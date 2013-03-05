@@ -64,7 +64,8 @@ public class Agent : Entity {
 	}
 	
 	// esto se ejecuta en cada ciclo de "simulación"
-	void execute(){		
+	void execute(){
+		position = transform.position;
 		nodeList = this.perceptNodes();
 		// TEST
 //		if (!_controller.moving && nodeList.Count > 1){
@@ -72,7 +73,7 @@ public class Agent : Entity {
 //			_controller.move((Vector3)node.position);	
 //			Debug.Log(movePreConf(node.GetIndex()));
 //		}
-		//position = transform.position;
+		
 		
 //		List<Gold>  goldList = this.perceptObjects<Gold> ("gold");
 //		
@@ -91,8 +92,8 @@ public class Agent : Entity {
 		
 	public bool movePreConf(int node){
 		Node actualNode = AstarPath.active.GetNearest(transform.position).node as GridNode;
-//		return PerceivableNode.connections(actualNode as GridNode).Contains(node);
-		return true;
+		return PerceivableNode.connections(actualNode as GridNode).Contains(node);
+//		return true;
 	}
 	
 	public void movePosCond(int node){
