@@ -6,17 +6,19 @@ using System;
 // This class will be erased, and replaced by the real engine
 public class Engine : MonoBehaviour, IEngine, IEngineComponent {
 	
-	public  GameObject  			  agent, gold;
-	public  Inn				          inn;
-	private float	   				  delta;
-	private Dictionary <string, Gold> coinsIn;
-	public  IEngine					  engine
+	public  GameObject  			   agent, gold;
+	public  Inn				           inn;
+	private float	   				   delta;
+	private Dictionary <string, Gold>  coinsIn;
+	private Dictionary <string, float> durations;
+	public  IEngine					   engine
 	{
 		get
 		{
 			return this;
 		}
 	}
+	
 	public  IDictionary<string, Gold> coins
 	{
 		get
@@ -28,6 +30,7 @@ public class Engine : MonoBehaviour, IEngine, IEngineComponent {
 			coinsIn = value as Dictionary <String, Gold>;
 		}
 	}
+	
 	public  float      _delta
 	{
 		get
@@ -40,13 +43,25 @@ public class Engine : MonoBehaviour, IEngine, IEngineComponent {
 		}
 	}
 	
-	private Agent[] agents = new Agent[3];
+	public  IDictionary <string, float> actionDurations
+	{
+		get 
+		{
+			return durations;
+		}
+	}
+		
+	
+	private Agent[] agents = new Agent[6];
 	
 	void Awake () {
 		
 		_delta = 0.1f;
 		
 		coins = new Dictionary <String, Gold>();
+		
+		durations = new Dictionary<string, float>();
+		durations["pickup"] = 0.5f;
 		
 		agents [0] = Agent.Create(agent, new Vector3(20, 23, 1), this, "", "agent1", 100);
 		agents [1] = Agent.Create(agent, new Vector3(30, 10, 1), this, "", "agent2", 100);

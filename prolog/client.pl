@@ -163,7 +163,21 @@ agent_init(Name) :-
 agent(Percept, Action) :-
     write('AGENT: percept: '), write(Percept), nl,
     write('AGENT: thinking...'), nl,
+	plan(Percept, Action).
+	
+%% The agent is in the same node as the gold
+% plan(Percept, action(pickup, [Name]):-
+	% name(Self),
+	% member(entity(Name, gold, Node, _P, _Prop), Percept),
+	% member(entity(Self, agent, Node, _, _), Percept),
+	% !.
+
+%% The agent sees a gold, and moves near it
+plan(Percept, action(move, [Node])):-
+	member(entity(_Name, gold, Node, _P, _Prop), Percept),
+	!.
+
+%% The agent moves randomly
+plan(Percept, action(move, [Node])):-
 	findall(node(Name, Pos, Connections), member(node(Name, Pos, Connections), Percept), Nodes),
-	random_member(node(Name, _, _), Nodes),
-    %sleep(1),
-    Action = action(move, [Name]).
+	random_member(node(Node, _, _), Nodes).

@@ -15,19 +15,23 @@ public class Agent : Entity {
 	private float _nodeSize = 2; 		// size of the node in the world measure
 										// Hardcodeado. Traté de hacerlo andar dinámicamente, pero no pude.
 										// Es el mismo número que el node size definido en el objeto A*, por IDE
-	private float _delta = 0.1f;   			// time between ticks of "simulation"
+	private float _delta = 0.1f;   		// time between ticks of "simulation"
 	public  int   life;
 
 	private RigidBodyController   _controller;	
 	private List<PerceivableNode> nodeList;							// TODO: Borrar. Es para test nomás
 	public  List<EObject>         backpack = new List<EObject>();
 	
+	public  List<EObject>         dropped  = new List<EObject>();
+	
 	public  int   _depthOfSight;		// radius of vision, in nodes
 	public  float _reach   = 1;			// radius of reach (of objects), in world magnitude
-	public  int   velocity = 5;
+	public  int   velocity = 5;			// TODO: revisar si esto va
+	
+	public  Dictionary<string, float> actionDurations;
 	
 	public  delegate       void ActionFinished(ActionResult result);
-	private ActionFinished actionFinished;
+	private ActionFinished actionFinished = delegate(ActionResult x) { };
 	
 	public static Agent Create(	GameObject prefab, 
 								Vector3 position, 
@@ -36,14 +40,16 @@ public class Agent : Entity {
 								string name, 
 								int lifeTotal) 
 	{
-		GameObject gameObj = Instantiate(prefab, position, Quaternion.identity) as GameObject;
-		Agent      agent   = gameObj.GetComponent<Agent>();
+		GameObject gameObj    = Instantiate(prefab, position, Quaternion.identity) as GameObject;
+		Agent      agent      = gameObj.GetComponent<Agent>();
 		
-		agent.life         = lifeTotal;
-		agent._description = description;
-		agent._name        = name;
-		agent._delta	   = se._delta;
-		agent._type		   = "agent";
+		agent.life            = lifeTotal;
+		agent._description    = description;
+		agent._name           = name;
+		agent._engine         = se;
+		agent._delta	      = se._delta;
+		agent._type		      = "agent";
+		agent.actionDurations = new Dictionary<string, float>(se.actionDurations); // copio las duraciones de las acciones
 		return agent;
 	}
 	
@@ -60,8 +66,6 @@ public class Agent : Entity {
 	// esto se ejecuta en cada ciclo de "simulación"
 	void execute(){		
 		nodeList = this.perceptNodes();
-		
-
 		// TEST
 //		if (!_controller.moving && nodeList.Count > 1){
 //			GridNode node = nodeList[UnityEngine.Random.Range(0, nodeList.Count)]._node;
@@ -69,24 +73,18 @@ public class Agent : Entity {
 //			Debug.Log(movePreConf(node.GetIndex()));
 //		}
 		//position = transform.position;
-
-		List<Agent> agents   = this.perceptObjects<Agent>("agent");
-		List<Gold>  goldList = this.perceptObjects<Gold> ("gold");
 		
-		// TEST
-		foreach(Gold gold in goldList){
-			if (!dropped.Contains(gold))
-				pickup(gold);
-		}
-		
-		if (backpack.Count > 1){
-			drop(backpack[0]);
-			dropped.Add(backpack[0]);
-		}
-		
-		if (!_controller.moving && nodeList.Count > 1)
-			_controller.move((Vector3)(nodeList[Random.Range(0, nodeList.Count)].position));	
-
+//		List<Gold>  goldList = this.perceptObjects<Gold> ("gold");
+//		
+//		foreach(Gold gold in goldList){
+//			if (!dropped.Contains(gold))
+//				pickup(gold);
+//		}
+//		
+//		if (backpack.Count > 1){
+//			drop(backpack[0]);
+//			dropped.Add(backpack[0]);
+//		}
 		// TEST
 		
 	}	
@@ -127,6 +125,17 @@ public class Agent : Entity {
 		}
 	}
 	
+	public bool pickupPreCon(EObject obj){
+		return isReachableObject(obj);     //TODO: revisar si isReachableObject es necesario
+	}
+	
+	public void pickupPosCon(EObject obj){
+		obj.gameObject.SetActive(false);
+		this.backpack.Add(obj);
+		Invoke("actionFinished(ActionResult.success)", actionDurations["pickup"]);
+	}
+	
+	//DEPRECATED
 	public void pickup(EObject obj) {
 		
 		if (isReachableObject(obj)){

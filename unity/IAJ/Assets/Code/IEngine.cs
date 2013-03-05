@@ -19,6 +19,12 @@ public interface IEngine{
 		set;
 	}
 	
+	// duración de las acciones en segundos
+	IDictionary <string, float> actionDurations
+	{
+		get;
+	}
+	
 	void addGold(Gold gold);
 }
 

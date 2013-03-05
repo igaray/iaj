@@ -4,6 +4,7 @@ using System.Collections;
 public class Gold : EObject {
 	
 	public override void Start(){
+		base.Start();
 		this._type   = "gold";
 		this.weigth  = 2;
 		this._engine = (GameObject.FindGameObjectWithTag("GameController").GetComponent(typeof(IEngineComponent))

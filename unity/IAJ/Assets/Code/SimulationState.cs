@@ -22,8 +22,9 @@ public class SimulationState : IEngine{
 	public  MailBox<string>              stdout;
 	public  GameObject					 goldPrefab;
 	private float	   					 delta;
-	private Dictionary <String, Gold>	 coinsIn;
-	public  IDictionary<String, Gold>	 coins
+	private Dictionary <string, Gold>	 coinsIn;
+	private Dictionary <string, float>   actionDurationsDic;
+	public  IDictionary<string, Gold>	 coins
 	{
 		get
 		{
@@ -31,7 +32,7 @@ public class SimulationState : IEngine{
 		}
 		set
 		{
-			coinsIn = value as Dictionary <String, Gold>;
+			coinsIn = value as Dictionary <string, Gold>;
 		}
 	}
 	
@@ -46,18 +47,26 @@ public class SimulationState : IEngine{
 			delta = value;
 		}
 	}
-		
+	
+	public  IDictionary<string, float>  actionDurations
+	{
+		get
+		{
+			return actionDurationsDic;
+		}
+	}
 
     public SimulationState(string ConfigurationFilePath, GameObject gold = null) {
-        config               = new Dictionary<string, string>();
-		agentIDs             = new Dictionary<string, int>();
-		agents               = new Dictionary<int, AgentState>();
+        config               = new Dictionary<string, string>    ();
+		agentIDs             = new Dictionary<string, int>       ();
+		agents               = new Dictionary<int,    AgentState>();
+		actionDurationsDic   = new Dictionary<string, float>     ();
         //objects              = new Dictionary<int, ObjectState>();
-		coins				 = new Dictionary <String, Gold>();
-        readyActionQueue     = new MailBox<Action>(true);
-        perceptRequests      = new MailBox<PerceptRequest>(true);
-		instantiateRequests  = new MailBox<InstantiateRequest>(true);
-        stdout               = new MailBox<string>(true);
+		coins				 = new Dictionary<string, Gold>      ();
+        readyActionQueue     = new MailBox   <Action>            (true);
+        perceptRequests      = new MailBox   <PerceptRequest>    (true);
+		instantiateRequests  = new MailBox   <InstantiateRequest>(true);
+        stdout               = new MailBox   <string>            (true);
 		goldPrefab 			 = gold;
 		_delta               = 0.1f;
 
@@ -94,6 +103,8 @@ public class SimulationState : IEngine{
         config["action_duration_pickup"] = "0";
         config["action_duration_drop"]   = "0";
         config["action_duration_attack"] = "1000";
+		
+		actionDurations["pickup"] = 0.5f;
     }
 
     public bool executableAction(Action action) {
