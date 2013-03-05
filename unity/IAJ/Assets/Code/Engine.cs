@@ -40,7 +40,7 @@ public class Engine : MonoBehaviour, IEngine, IEngineComponent {
 		}
 	}
 	
-	private Agent[] agents = new Agent[6];
+	private Agent[] agents = new Agent[3];
 	
 	void Awake () {
 		
@@ -65,6 +65,7 @@ public class Engine : MonoBehaviour, IEngine, IEngineComponent {
 //		coins["gold8"]  = Gold.Create (gold,  new Vector3(12, 0, 18), this, "", "gold8",  2);
 //		coins["gold9"]  = Gold.Create (gold,  new Vector3(26, 0, 6 ), this, "", "gold9",  2);
 //		coins["gold10"] = Gold.Create (gold,  new Vector3(11, 0, 4 ), this, "", "gold10", 2);
+
 		
 		inn = GameObject.FindWithTag ("inn").GetComponent<Inn>();
 	}
@@ -76,4 +77,13 @@ public class Engine : MonoBehaviour, IEngine, IEngineComponent {
 		gold._name  = name;
 		coins[name] = gold;
 	}
+	
+//	void Update () {
+//		Transform p;
+//		foreach(Agent a in agents){
+//			p = a.transform;
+//			if (inn.isInside(p.position))
+//				Debug.Log(a.name + " is inside the inn");
+//		}
+//	}
 }

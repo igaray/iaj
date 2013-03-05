@@ -280,13 +280,14 @@ public class AgentState {
 
 // Runs within Unity3D
 public class SimulationEngine {
-    
+
     public int               currentAgentID = 1;
     public ConnectionHandler connectionHandler;
     public SimulationState   simulationState;
 
     public SimulationEngine(SimulationState ss) {
         simulationState   = ss;
+
         connectionHandler = new ConnectionHandler(ss);
     }
 
@@ -324,6 +325,7 @@ public class SimulationEngine {
     }
 
     public void handleActions() {
+
         Action                      currentAction;
         MailBox<Action>             raq    = simulationState.readyActionQueue;
         Dictionary<int, AgentState> agents = simulationState.agents;
