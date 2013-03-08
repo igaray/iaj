@@ -113,7 +113,7 @@ public class AgentConnection {
                     actions.Send(action);                                       // send action to handler
                     if (results.Recv(out result)) {                             // get action result from handler
                         simulationState.stdout.Send(String.Format("AC {0}: action result received.\n", name));
-                        Thread.Sleep(action.duration);                          // sleep for the duration of the action. 
+                        //Thread.Sleep(action.duration);                          // sleep for the duration of the action. 
                         simulationState.stdout.Send(String.Format("AC {0}: sending action result to agent.\n", name));
                         sendResult(result);                                     // send action result to agent
                     }

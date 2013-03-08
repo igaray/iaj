@@ -252,6 +252,7 @@ public class AgentState {
     public string                name;
     public int                   agentID;
     public Position              position;
+	public Action                lastAction;
     public ActionResult          lastActionResult;
 	public Agent				 agentController;
 		
@@ -261,6 +262,7 @@ public class AgentState {
 	
     public AgentState(SimulationState ss, string name, int id, GameObject prefab) {
         this.agentID           = id;
+		this.lastAction        = new Action();
         this.lastActionResult  = ActionResult.success;
         this.actions           = ss.readyActionQueue;
         this.results           = new MailBox<ActionResult>(false);
@@ -268,6 +270,7 @@ public class AgentState {
         this.agentController   = Agent.Create(prefab, new Vector3(20, 2, 1), ss, "", name, 100);  
 		
 		this.agentController.setCallback(results.Send);
+		this.agentController.agentState = this;
 	}
 
     public String toString() {
@@ -342,9 +345,10 @@ public class SimulationEngine {
             if (raq.NBRecv(out currentAction)) {
                 int agentID = currentAction.agentID;
                 try {
+					agents[agentID].lastAction = currentAction;
                     if (simulationState.executableAction(currentAction)) {
                         simulationState.stdout.Send(String.Format("AH: the action is executable.\n"));
-                        agents[agentID].results.Send(ActionResult.success);
+                        //agents[agentID].results.Send(ActionResult.success);
                         agents[agentID].lastActionResult = ActionResult.success;
                         simulationState.applyActionEffects(currentAction);
                     }
@@ -354,8 +358,9 @@ public class SimulationEngine {
                         agents[agentID].lastActionResult = ActionResult.failure;
                     }
                 }
-                catch (System.Collections.Generic.KeyNotFoundException) {
+                catch (System.Collections.Generic.KeyNotFoundException e) {
                     simulationState.stdout.Send(String.Format("AH: Error: agent id {0} not present in agent database.\n", agentID));
+					Debug.LogError(e.ToString());
                 }
             }
         }

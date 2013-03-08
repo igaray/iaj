@@ -36,7 +36,7 @@ public class SimulationState : IEngine{
 		}
 	}
 	
-	public  float   				     _delta
+	public float _delta
 	{
 		get
 		{
@@ -48,13 +48,21 @@ public class SimulationState : IEngine{
 		}
 	}
 	
-	public  IDictionary<string, float>  actionDurations
+	public IDictionary<string, float> actionDurations
 	{
 		get
 		{
 			return actionDurationsDic;
 		}
 	}
+	public bool test
+	{
+		get
+		{
+			return false;
+		}
+	}
+		
 
     public SimulationState(string ConfigurationFilePath, GameObject gold = null) {
         config               = new Dictionary<string, string>    ();
@@ -104,7 +112,8 @@ public class SimulationState : IEngine{
         config["action_duration_drop"]   = "0";
         config["action_duration_attack"] = "1000";
 		
-		actionDurations["pickup"] = 0.5f;
+		actionDurations["pickup"] = 1f;
+		actionDurations["drop"]   = 1f;
     }
 
     public bool executableAction(Action action) {
@@ -130,15 +139,11 @@ public class SimulationState : IEngine{
                 break;
             }
             case ActionType.pickup: {
-                // TODO
-                // check if the object the agent wants to pick up is in range
                 result = agent.pickupPreCon(coins[action.objectID]);
                 break;
             }
             case ActionType.drop: {
-                // TODO
-                // check if the object  the agent wants to drop is in its inventory
-                result = false;
+                result = agent.dropPreCon(coins[action.objectID]);;
                 break;
             }
         }
@@ -168,6 +173,7 @@ public class SimulationState : IEngine{
                 // TODO
                 // remove the object from the agent's inventory
                 // update the object's position
+				agent.dropPosCon(coins[action.objectID]);
                 break;
             }
         }

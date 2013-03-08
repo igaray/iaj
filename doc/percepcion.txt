@@ -27,7 +27,7 @@ isInBuilding(Edificio)
 Se devuelve sólo si el agente se encuentra dentro de un edificio. Edificio es el identificador unívoco de la entidad edificio en la que se encuentra.
 */
 
-selfProperties(Nombre, UltimaAccion, ResultadoUltimaAccion, Vida, VidaTotal, Backpack, InBuilding)
+selfProperties(Nombre, ResultadoUltimaAccion, Vida, VidaTotal, Backpack, InBuilding)
 
-Devuelve características del propio agente. El nombre, la última acción, su resultado, la vida y la vida total. Backpack tiene una lista con los identificadores de las entidades que el agente lleva en su mochila. InBuilding mantiene "no" si el agente no se encuentra en un edificio, y sino devuelve el identificador del edificio en el que el agente se encuentra.
+Devuelve características del propio agente. El nombre, el resultado de la última acción, la vida y la vida total. Backpack tiene una lista con los identificadores de las entidades que el agente lleva en su mochila. InBuilding mantiene "no" si el agente no se encuentra en un edificio, y sino devuelve el identificador del edificio en el que el agente se encuentra.
 

@@ -50,6 +50,13 @@ public class Engine : MonoBehaviour, IEngine, IEngineComponent {
 			return durations;
 		}
 	}
+	public  bool test
+	{
+		get
+		{
+			return true;
+		}
+	}
 		
 	
 	private Agent[] agents = new Agent[6];
@@ -62,6 +69,7 @@ public class Engine : MonoBehaviour, IEngine, IEngineComponent {
 		
 		durations = new Dictionary<string, float>();
 		durations["pickup"] = 0.5f;
+		durations["drop"]   = 0.5f;
 		
 		agents [0] = Agent.Create(agent, new Vector3(20, 23, 1), this, "", "agent1", 100);
 		agents [1] = Agent.Create(agent, new Vector3(30, 10, 1), this, "", "agent2", 100);

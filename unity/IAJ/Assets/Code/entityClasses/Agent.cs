@@ -18,17 +18,18 @@ public class Agent : Entity {
 	private float _delta = 0.1f;   		// time between ticks of "simulation"
 	public  int   life;
 
-	private RigidBodyController   _controller;	
-	private List<PerceivableNode> nodeList;							// TODO: Borrar. Es para test nomás
-	public  List<EObject>         backpack = new List<EObject>();
-	
-	public  List<EObject>         dropped  = new List<EObject>();
+	private RigidBodyController       _controller;	
+	private List<PerceivableNode>     nodeList;							// TODO: Borrar. Es para test nomás
+	public  List<EObject>             backpack = new List<EObject>();	
+	public  List<EObject>             dropped  = new List<EObject>();
+	public  Dictionary<string, float> actionDurations;
+	public  AgentState                agentState;
 	
 	public  int   _depthOfSight;		// radius of vision, in nodes
 	public  float _reach   = 1;			// radius of reach (of objects), in world magnitude
 	public  int   velocity = 5;			// TODO: revisar si esto va
 	
-	public  Dictionary<string, float> actionDurations;
+	
 	
 	public  delegate       void ActionFinished(ActionResult result);
 	private ActionFinished actionFinished = delegate(ActionResult x) { };
@@ -57,6 +58,7 @@ public class Agent : Entity {
 		base.Start();		
 		this._controller = this.GetComponent<RigidBodyController>();	
 		InvokeRepeating("execute", 0, _delta);
+		rigidbody.sleepVelocity = 0f;
 	}
 	
 	public void setCallback(ActionFinished s){
@@ -68,24 +70,23 @@ public class Agent : Entity {
 		position = transform.position;
 		nodeList = this.perceptNodes();
 		// TEST
-//		if (!_controller.moving && nodeList.Count > 1){
-//			GridNode node = nodeList[UnityEngine.Random.Range(0, nodeList.Count)]._node;
-//			_controller.move((Vector3)node.position);	
-//			Debug.Log(movePreConf(node.GetIndex()));
-//		}
-		
-		
-//		List<Gold>  goldList = this.perceptObjects<Gold> ("gold");
-//		
-//		foreach(Gold gold in goldList){
-//			if (!dropped.Contains(gold))
-//				pickup(gold);
-//		}
-//		
-//		if (backpack.Count > 1){
-//			drop(backpack[0]);
-//			dropped.Add(backpack[0]);
-//		}
+		if (_engine.test){
+			if (!_controller.moving && nodeList.Count > 1){
+				GridNode node = nodeList[UnityEngine.Random.Range(0, nodeList.Count)]._node;
+				_controller.move((Vector3)node.position);	
+			}
+			List<Gold>  goldList = this.perceptObjects<Gold> ("gold");
+			
+			foreach(Gold gold in goldList){
+				if (!dropped.Contains(gold))
+					pickup(gold);
+			}
+			
+			if (backpack.Count > 1){
+				drop(backpack[0]);
+				dropped.Add(backpack[0]);
+			}
+		}
 		// TEST
 		
 	}	
@@ -105,8 +106,12 @@ public class Agent : Entity {
 		_controller.move(target);	
 	}
 	
-	public void stoppedMoving(){
+	public void stoppedAction(){
 		actionFinished(ActionResult.success);
+	}
+	
+	public void actionFailed(){
+		actionFinished(ActionResult.failure);
 	}
 	
 	public void subLife(int dif) {
@@ -133,7 +138,7 @@ public class Agent : Entity {
 	public void pickupPosCon(EObject obj){
 		obj.gameObject.SetActive(false);
 		this.backpack.Add(obj);
-		Invoke("actionFinished(ActionResult.success)", actionDurations["pickup"]);
+		Invoke("stoppedAction", actionDurations["pickup"]);
 	}
 	
 	//DEPRECATED
@@ -148,6 +153,21 @@ public class Agent : Entity {
 		}
 	}
 	
+	public bool dropPreCon(EObject obj){
+		return backpack.Contains(obj);     
+	}
+	
+	public void dropPosCon(EObject obj){
+		Vector3 newPosition = this.transform.position;
+		this.backpack.Remove(obj);
+		obj.gameObject.SetActive(true);
+		newPosition.y += 2.5f;
+		obj.transform.position = newPosition;
+		obj.rigidbody.AddForce(new Vector3(20,20,20)); //TODO: cambiar esta fruta
+		Invoke("stoppedAction", actionDurations["drop"]);
+	}
+	
+	//DEPRECATED
 	public void drop(EObject obj) {
 		
 		if (backpack.Contains(obj)){
@@ -168,7 +188,7 @@ public class Agent : Entity {
 		p.addEntitiesRange(perceptObjects<Agent>("agent").Cast<IPerceivableEntity>().ToList());
 		p.addEntitiesRange(perceptObjects<Gold> ("gold") .Cast<IPerceivableEntity>().ToList());
 		p.addEntitiesRange(perceptNodes()				 .Cast<IPerceivableEntity>().ToList());
-}
+	}
 	
 	public override string toProlog(){
 		string aux = base.toProlog();		
@@ -179,13 +199,12 @@ public class Agent : Entity {
 		Building building = inBuilding();
 		string   inside   = building != null ? building._name : "no";
 		string   aux;
-		if (inProlog){
-			aux = string.Format("selfProperties({0}, {1}, {2}, {3}, {4}, {5}, {6})",
+		if (inProlog){ //future implementations will have XML generations instead of prolog
+			aux = string.Format("selfProperties({0}, {1}, {2}, {3}, {4}, {5})",
 				this._name,
-	//			this.lastAction,
-	//			this.lastActionResult,
-				"todo",
-				"todo",
+				this.agentState.lastActionResult,
+//				"todo",
+//				"todo",
 				this.life,
 				this.lifeTotal,
 				new PrologList(this.backpack).toProlog(),

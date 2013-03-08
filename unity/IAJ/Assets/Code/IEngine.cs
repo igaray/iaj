@@ -25,6 +25,11 @@ public interface IEngine{
 		get;
 	}
 	
+	bool test
+	{
+		get;
+	}
+	
 	void addGold(Gold gold);
 }
 

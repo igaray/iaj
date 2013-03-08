@@ -1,4 +1,4 @@
-
+:- dynamic action/2, lastAction/1.
 %--------------------------------------------------------------------%
 start :-
     agent_reset,
@@ -94,13 +94,14 @@ send_action(Action, Result) :-
     write_term(OutStream, XML, []),
     nl(OutStream),
     flush_output(OutStream),
-
     % Receive action result.
-    read(InStream, Response),
+    read(InStream, Response),	
     action_result(Response, Result).
 
 action_result(unknown, unknown).
-action_result(success, success).
+action_result(success, success):-
+	lastAction(LastAction),
+	assert(LastAction).
 action_result(failure, failure) :-
     write('CONNECTION: action failed!'), nl.
 action_result(end_of_file, failure) :-
@@ -163,13 +164,23 @@ agent_init(Name) :-
 agent(Percept, Action) :-
     write('AGENT: percept: '), write(Percept), nl,
     write('AGENT: thinking...'), nl,
-	plan(Percept, Action).
+	plan(Percept, Action),
+	retractall(lastAction(_)),
+	assert(lastAction(Action)),
+	writeln(Action).
+	
+%if the agent has an object in the backpack, he drops it
+plan(Percept, action(drop, [Name])):-
+	name(Self),
+	member(selfProperties(Self, _, _, _, [entity(Name, gold, _, _, _) | _], _), Percept),
+	!.
 	
 %% The agent is in the same node as the gold
 plan(Percept, action(pickup, [Name])):-
 	name(Self),
 	member(entity(Name, gold, Node, _P, _Prop), Percept),
 	member(entity(Self, agent, Node, _, _), Percept),
+	not(action(pickup, [Name])),
 	!.
 
 %% The agent sees a gold, and moves near it
