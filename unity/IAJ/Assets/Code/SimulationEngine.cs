@@ -171,7 +171,7 @@ public class Action {
     public int        agentID  = 0;   // ID of the agent performing the action.
     public int        targetID = 0;   // ID of an agent that is the recipient of the action.
     public string     objectID = "";
-    public int        duration = 0;
+    public float      duration = 0f;
     public Position   position;
 
     public Action() {
@@ -196,7 +196,7 @@ public class Action {
                 type_str = document.SelectSingleNode("/action/type").InnerText;
                 this.agentID  = aid;
                 this.actionID = document.SelectSingleNode("/action/id").InnerText;
-                this.duration = Convert.ToInt32(ss.config["action_duration_"+type_str]);
+                this.duration = ss.config.actionDurations[type_str];
                 
                 if (type_str == "goodbye") {
                     this.type = ActionType.goodbye;
@@ -260,14 +260,14 @@ public class AgentState {
     public MailBox<ActionResult> results;
     public MailBox<Percept>      percepts;
 	
-    public AgentState(SimulationState ss, string name, int id, GameObject prefab) {
+    public AgentState(SimulationState ss, string name, int id, Vector3 spawnSite, GameObject prefab) {
         this.agentID           = id;
 		this.lastAction        = new Action();
         this.lastActionResult  = ActionResult.success;
         this.actions           = ss.readyActionQueue;
         this.results           = new MailBox<ActionResult>(false);
         this.percepts          = new MailBox<Percept>(false);
-        this.agentController   = Agent.Create(prefab, new Vector3(20, 2, 1), ss, "", name, 100);  
+        this.agentController   = Agent.Create(prefab, spawnSite, ss, "", name, 100);  
 		
 		this.agentController.setCallback(results.Send);
 		this.agentController.agentState = this;
@@ -286,6 +286,7 @@ public class AgentState {
 public class SimulationEngine {
 
     public int               currentAgentID = 1;
+    public int               currentRespawn = 0;
     public ConnectionHandler connectionHandler;
     public SimulationState   simulationState;
 
@@ -371,7 +372,8 @@ public class SimulationEngine {
 		InstantiateRequest          request;
 		int                         agentID;
 		string                      name;
-		AgentState                  state;		
+		AgentState                  state;	
+        Vector3                     spawnPosition;	
 		
         /*
         Instantiating an agent in the simulation consists of associating the 
@@ -381,9 +383,18 @@ public class SimulationEngine {
         If the agent has already been instantiated, then its old AgentID and AgentState
         must be recovered from the SimulationState, and associated to the new AgentConnection.
         */
+
+        /* Esto lo que hace es elegir una posicion donde va a spawnear el agente.
+           Cada vez que un agente se instancia (por primera vez), se incrementa en uno 
+           modulo la cantidad de sitios de instanciacion. 
+        */
 		while (simulationState.instantiateRequests.NotEmpty()) {
 			if (simulationState.instantiateRequests.NBRecv(out request)) {
 				name = request.agentConnection.name;
+
+                spawnPosition = GameObject.FindGameObjectsWithTag("Respawn")[currentRespawn].transform.position;
+                currentRespawn = (currentRespawn + 1) % GameObject.FindGameObjectsWithTag("Respawn").Length;
+
 				if (simulationState.agentIDs.TryGetValue(name, out agentID)) {
 					// esta
                     request.agentConnection.agentState = simulationState.agents[agentID];
@@ -391,7 +402,7 @@ public class SimulationEngine {
                 else {
                     // no esta
                     agentID = currentAgentID;
-                    state   = new AgentState(simulationState, name, agentID, prefab);
+                    state   = new AgentState(simulationState, name, agentID, spawnPosition, prefab);
                     request.agentConnection.agentState = state;
                     
                     simulationState.agentIDs.Add(name, agentID);

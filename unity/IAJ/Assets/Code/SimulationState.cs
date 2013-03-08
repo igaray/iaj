@@ -12,7 +12,7 @@ using System.Xml;
 // Runs within Unity3D
 public class SimulationState : IEngine{
 
-    public  Dictionary<string, string>   config;
+    public  SimulationConfig             config;
     public  Dictionary<string, int>      agentIDs; // nombres -> ids
     public  Dictionary<int, AgentState>  agents;   // ids -> estado interno del agente
 //    public Dictionary<int, ObjectState> objects;
@@ -52,7 +52,7 @@ public class SimulationState : IEngine{
 	{
 		get
 		{
-			return actionDurationsDic;
+			return config.actionDurations;
 		}
 	}
 	public bool test
@@ -63,12 +63,11 @@ public class SimulationState : IEngine{
 		}
 	}
 		
-
     public SimulationState(string ConfigurationFilePath, GameObject gold = null) {
-        config               = new Dictionary<string, string>    ();
+        config               = new SimulationConfig("config.xml");
 		agentIDs             = new Dictionary<string, int>       ();
 		agents               = new Dictionary<int,    AgentState>();
-		actionDurationsDic   = new Dictionary<string, float>     ();
+
         //objects              = new Dictionary<int, ObjectState>();
 		coins				 = new Dictionary<string, Gold>      ();
         readyActionQueue     = new MailBox   <Action>            (true);
@@ -77,43 +76,6 @@ public class SimulationState : IEngine{
         stdout               = new MailBox   <string>            (true);
 		goldPrefab 			 = gold;
 		_delta               = 0.1f;
-
-        /*
-        XmlDocument document = new XmlDocument();
-        document.Load(new StreamReader("config.xml"));
-
-        config["simulation_duration"] = document.SelectSingleNode("/config/simulation_duration").InnerText;
-        //config["rows"] = document.SelectSingleNode("/config/size/rows").InnerText;
-        //config["cols"] = document.SelectSingleNode("/config/size/cols").InnerText;
-        //config["vision_length"] = document.SelectSingleNode("/config/vision_length").InnerText;
-        //config["unconscious_time"] = document.SelectSingleNode("/config/unconscious_time").InnerText;
-
-        XmlNodeList xnl = document.SelectNodes("/config/actions/action");
-        foreach (XmlNode action in xnl) {
-            string name     = action.Attributes["name"].Value;
-            string duration = action.Attributes["duration"].Value;
-            config["action_duration_"+name] = duration; 
-        }
-
-
-        stdout.Send("Loaded the following configuration:");
-        foreach (KeyValuePair<string, string> pair in config) {
-            stdout.Send(String.Format("{0}:\t{1}", pair.Key, pair.Value));
-        }
-        */
-
-        /*
-        this is to simulate the end result of reading in the config file
-        */
-        config["simulation_duration"]    = "10";
-        config["action_duration_noop"]   = "1000";
-        config["action_duration_move"]   = "1000";
-        config["action_duration_pickup"] = "0";
-        config["action_duration_drop"]   = "0";
-        config["action_duration_attack"] = "1000";
-		
-		actionDurations["pickup"] = 1f;
-		actionDurations["drop"]   = 1f;
     }
 
     public bool executableAction(Action action) {

@@ -179,7 +179,6 @@ public class AgentConnection {
         // convert percept to xml string
         // send it over the wire
         streamWriter.Write(percept.ToString());
-		Debug.LogError("AC: sendPercept: percept: " + percept.ToString());
         streamWriter.Flush();
     }
 
