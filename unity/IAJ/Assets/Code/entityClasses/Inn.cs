@@ -3,7 +3,7 @@ using System.Collections;
 
 public class Inn : Building {
 	
-	public float healCoefficient = 0.01f;
+	public float healCoefficient = 0.01f; //not used yet
 	
 	public override void Start(){
 		this._type = "inn";

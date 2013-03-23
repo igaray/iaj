@@ -21,7 +21,7 @@ public class Agent : Entity {
 	private RigidBodyController       _controller;	
 	private List<PerceivableNode>     nodeList;							// TODO: Borrar. Es para test nomás
 	public  List<EObject>             backpack = new List<EObject>();	
-	public  List<EObject>             dropped  = new List<EObject>();
+	public  List<EObject>             dropped  = new List<EObject>();	// TODO: Borrar. Es para test nomás
 	public  Dictionary<string, float> actionDurations;
 	public  AgentState                agentState;
 	
@@ -70,13 +70,13 @@ public class Agent : Entity {
 		position = transform.position;
 		nodeList = this.perceptNodes();
 		// TEST
+		// esto se ejecuta cuando ejecutas la escena leotest, pero no cuando se ejecuta con el servidor corriendo
 		if (_engine.test){
 			if (!_controller.moving && nodeList.Count > 1){
 				GridNode node = nodeList[UnityEngine.Random.Range(0, nodeList.Count)]._node;
 				_controller.move((Vector3)node.position);	
 			}
-			List<Gold>  goldList = this.perceptObjects<Gold> ("gold");
-			
+			List<Gold>  goldList = this.perceptObjects<Gold> ("gold");			
 			foreach(Gold gold in goldList){
 				if (!dropped.Contains(gold))
 					pickup(gold);
@@ -90,15 +90,69 @@ public class Agent : Entity {
 		// TEST
 		
 	}	
-		
+
+	// ACTION: MOVE
 	public bool movePreConf(int node){
 		Node actualNode = AstarPath.active.GetNearest(transform.position).node as GridNode;
 		return PerceivableNode.connections(actualNode as GridNode).Contains(node);
-//		return true;
 	}
 	
 	public void movePosCond(int node){
 		_controller.move((Vector3)(AstarPath.active.graphs[0].nodes[node].position));	
+	}
+	
+	// ACTION: PICKUP
+	public bool pickupPreCon(EObject obj){
+		return isReachableObject(obj);     //TODO: revisar si isReachableObject es necesario
+	}
+	
+	public void pickupPosCon(EObject obj){
+		obj.gameObject.SetActive(false);
+		this.backpack.Add(obj);
+		Invoke("stoppedAction", actionDurations["pickup"]);
+	}
+	
+	//DEPRECATED
+	public void pickup(EObject obj) {
+		
+		if (isReachableObject(obj)){
+			obj.gameObject.SetActive(false);
+			this.backpack.Add(obj);
+		}
+		else{
+			
+		}
+	}
+	
+	// ACTION: DROP
+	public bool dropPreCon(EObject obj){
+		return backpack.Contains(obj);     
+	}
+	
+	public void dropPosCon(EObject obj){
+		Vector3 newPosition = this.transform.position;
+		this.backpack.Remove(obj);
+		obj.gameObject.SetActive(true);
+		newPosition.y += 2.5f;
+		obj.transform.position = newPosition;
+		obj.rigidbody.AddForce(new Vector3(20,20,20)); //TODO: cambiar esta fruta
+		Invoke("stoppedAction", actionDurations["drop"]);
+	}
+	
+	//DEPRECATED
+	public void drop(EObject obj) {
+		
+		if (backpack.Contains(obj)){
+			Vector3 newPosition = this.transform.position;
+			this.backpack.Remove(obj);
+			obj.gameObject.SetActive(true);
+			newPosition.y += 2.5f;
+			obj.transform.position = newPosition;
+			obj.rigidbody.AddForce(new Vector3(20,20,20)); 
+		}
+		else{
+			
+		}
 	}
 	
 	// posiblemente innecesario
@@ -130,59 +184,7 @@ public class Agent : Entity {
 			this.life += dif;	
 		}
 	}
-	
-	public bool pickupPreCon(EObject obj){
-		return isReachableObject(obj);     //TODO: revisar si isReachableObject es necesario
-	}
-	
-	public void pickupPosCon(EObject obj){
-		obj.gameObject.SetActive(false);
-		this.backpack.Add(obj);
-		Invoke("stoppedAction", actionDurations["pickup"]);
-	}
-	
-	//DEPRECATED
-	public void pickup(EObject obj) {
-		
-		if (isReachableObject(obj)){
-			obj.gameObject.SetActive(false);
-			this.backpack.Add(obj);
-		}
-		else{
-			// TODO: excepcion? devolver falso? guardarlo en algun lado?
-		}
-	}
-	
-	public bool dropPreCon(EObject obj){
-		return backpack.Contains(obj);     
-	}
-	
-	public void dropPosCon(EObject obj){
-		Vector3 newPosition = this.transform.position;
-		this.backpack.Remove(obj);
-		obj.gameObject.SetActive(true);
-		newPosition.y += 2.5f;
-		obj.transform.position = newPosition;
-		obj.rigidbody.AddForce(new Vector3(20,20,20)); //TODO: cambiar esta fruta
-		Invoke("stoppedAction", actionDurations["drop"]);
-	}
-	
-	//DEPRECATED
-	public void drop(EObject obj) {
-		
-		if (backpack.Contains(obj)){
-			Vector3 newPosition = this.transform.position;
-			this.backpack.Remove(obj);
-			obj.gameObject.SetActive(true);
-			newPosition.y += 2.5f;
-			obj.transform.position = newPosition;
-			obj.rigidbody.AddForce(new Vector3(20,20,20)); //TODO: cambiar esta fruta
-		}
-		else{
-			//TODO: excepcion? devolver falso? guardarlo en algun lado?
-		}
-	}
-	
+
 	public void perceive(Percept p){
 		
 		p.addEntitiesRange(perceptObjects<Agent>("agent").Cast<IPerceivableEntity>().ToList());
@@ -203,8 +205,6 @@ public class Agent : Entity {
 			aux = string.Format("selfProperties({0}, {1}, {2}, {3}, {4}, {5})",
 				this._name,
 				this.agentState.lastActionResult,
-//				"todo",
-//				"todo",
 				this.life,
 				this.lifeTotal,
 				new PrologList(this.backpack).toProlog(),
@@ -242,15 +242,16 @@ public class Agent : Entity {
 		List   <PerceivableNode> connections = new List   <PerceivableNode>();
 		Queue  <BFNode>          q           = new Queue  <BFNode>         ();
 		HashSet<Node>            visited     = new HashSet<Node>           ();
+		
 		//Breadth First Search
 		BFNode t = new BFNode(0, gridNode);
 		q.Enqueue(t);
 		while (q.Count > 0){
 			t = q.Dequeue();
 			connections.Add(t.node);
-			if (t.depth < _depthOfSight){ //si no está en el límite, agr
+			if (t.depth < _depthOfSight){ 
 				foreach(Node node in t.node){
-					if (!(visited.Contains(node)) && //famoso if de reglón de ancho, warpeado
+					if (!(visited.Contains(node)) && 
 						isVisibleNode(node) &&
 						node.walkable)
 					{	
@@ -264,14 +265,12 @@ public class Agent : Entity {
 	}
 	
 	//check if the node is in a visible distance
-	private bool isVisibleNode(Node node){
-		
+	private bool isVisibleNode(Node node){		
 		return (new Int3(transform.position) -
 				node.position).worldMagnitude < _depthOfSight * _nodeSize;
 	}
 
-	private bool isReachableObject(EObject obj){
-		
+	private bool isReachableObject(EObject obj){		
 		return (obj.transform.position - transform.position).magnitude < _depthOfSight * _nodeSize;
 	}
 }

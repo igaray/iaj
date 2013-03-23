@@ -1,0 +1,181 @@
+\documentclass[a4paper,oneside]{article}
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{latexsym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage[colorlinks=true,urlcolor=Black,linkcolor=Black]{hyperref}
+
+\setlength{\parskip}{1ex plus 0.5ex minus 0.2ex}
+
+\title{Proyecto Final de Inteligencia Artificial en Juegos}
+%\subtitle{Desarrollo de Agentes Inteligentes para el control de personajes en un Juego de Rol}
+\author{Iñaki Garay \and Leonardo Molas \and Emiliano Montenegro}
+
+\begin{document}
+
+\maketitle
+
+\section{Introducción}
+
+Este proyecto fue realizado por los alumnos Iñaki Garay, Leonardo Molas y Emiliano Montenegro, estudiantes avanzados de la carrera de Licenciatura en Ciencias de la
+Computación, para la materia optativa Inteligencia Artificial en Juegos, dictada por el 
+Dr. Diego Martínez. Su objetivo fue el diseño e implementación de un sistema de 
+desarrollo de entornos multi-agente en mundos 3D, en donde la comunicación entre el 
+servidor y los clientes se desarrolla en tiempo real. El desarrollo del sistema fue 
+realizado en la plataforma \textbf{Unity 3D}.
+
+La intención del proyecto es su futuro modificación y uso en la materia Inteligencia 
+Artificial, también de la carrera Licenciatura en Ciencias de la Computación, por lo que 
+fue supervisada por el Dr. Mauro Gómez Lucero, en coordinación con el Dr. Martínez.
+
+Para la lectura del presente informe, dado que es fundamentalmente documentación 
+técnica del sistema implementado, los autores recomiendan primeramente la lectura de la
+documentación propia de \textbf{Unity 3D}, ya que se asumirá que se conocen los 
+conceptos y clases básicas de dicha plataforma.
+
+\section{Arquitectura}
+
+%\subsection{}
+
+%nombre muy muy malo
+\section{Representación del mundo} 
+
+La característica distintiva de este sistema es que el manejo de la lógica del mundo no es mantenida de forma explícita por el motor, sino que es realizado por el motor de física de \textbf{Unity 3D}. Cada elemento del mundo es un componente físico del juego,
+más específicamente un \texttt{GameObject} con un \texttt{Collider}, y los movimientos que realizan son a partir de la aplicación de fuerzas. La información necesaria para la
+realización de la percepción es solicitada al motor de Unity, para luego ser procesada 
+por el motor del sistema.
+
+El esquema de clases es similar al del sistema multi-agente utilizado actualmente en 
+Inteligencia Artificial, el cual se puede observar en el esquema de clases de la Figura
+\ref{fig:diagramaDeClasesEntidades}. En éste se observan la herencia de las clases que
+mantienen la información sobre las entidades, así como las operaciones para su 
+consulta, modificación y uso. Otra característica a marcar es el hecho que todas las 
+clases no finales del árbol de herencia (todas las clases que no son hojas en dicho 
+árbol) son abstractas.
+
+\begin{figure}
+ \centering
+\includegraphics[width=.7\textwidth]{diagramaDeClasesEntidades}
+
+ \caption{Diagrama de clases de las entidades}
+ \label{fig:diagramaDeClasesEntidades}
+\end{figure}
+
+Cada elemento del mundo relevante para el juego, el cual es mantenido por Unity como un
+\texttt{GameObject}, tiene asociado siempre un objeto de una de las clases que se 
+muestran en la figura (que no sea abstracta). Vale mencionar a su vez que la clase
+\texttt{Entity} hereda de \texttt{MonoBehaviour}, por lo que todos las entidades pueden
+implementar los métodos \texttt{Update}, \texttt{Start}, \texttt{Awake}, etc., 
+facilitando el manejo de las objetos físicos desde el código propio del sistema. Los 
+elementos no relevantes para el sistema no tendrán una de estas clases asociada. Éstos
+serán las paredes, árboles, terreno, entre otros.
+
+\subsection{Clases de las entidades}
+
+Toda entidad física tendra asociada una clase que herede de \texttt{Entity}. Por esto, en 
+esta clase se encuentran algunas propiedades comunes (como la descripción de la entidad,
+su nombre, posición, etc.), así como métodos comunes a todas las entidades.
+
+Los elementos que no son agentes pero sí son móviles serán representados por la clase
+\texttt{EObject}. Actualmente, sólo existe una implementación de esta clase abstracta, la
+cual es \texttt{Gold}, que representa los tesoros que pueden levantar los agentes.
+
+Las clases que hereden de \texttt{Building} representarán edificios en el mundo. Tendrán
+la característica de ser elementos grandes, a los cuales los agentes podran ingresar, o 
+sea, representan un volumen en el mundo. Físicamente son representados por un 
+\texttt{GameObject} sin \texttt{Collider} ni textura, con forma de ortoedro. Por esto, puede representar una zona en el mundo.
+
+La implementación actual de esta clase es \texttt{Inn}, el cual representaría un hotel
+en el mundo. En el juego de prueba actual, se puede observar un objeto vacío como fue
+descripto, el cual está rodeado por paredes. Éstas simplemente representan obstáculos 
+para el agente, pero no mantiene información asociada ni objeto de tipo \texttt{Entity}.
+A un \texttt{Building} se le puede consultar por si una determinada posición se 
+encuentra dentro o fuera de ella, siendo ésta su principal función.
+
+Finalmente, la clase más importante para el sistema es \texttt{Agent}. Esta maneja toda
+la información relacionada al agente con respecto al juego (esto es vida, elementos que
+lleva en un mochila, velocidad a la que se puede mover, etc). A su vez, implementa todos
+los métodos necesarios para su manejo. Entre estos se encuentran la generación de la 
+percepción del agente, y todas las acciones que puede realizar. Éstos se verán en mayor
+detalle en la sección \ref{sec:agentes}.
+
+\subsection{Terreno}
+
+El terreno físicamente es un terreno común de Unity. Para poder ser utilizado por los
+agentes, el terreno tiene asociado un grafo con forma de grilla. Ésta esta formada 
+por un conjunto de nodos, los cuales tienen una posición asociada, y un conjunto de 
+aristas, las cuales representan las conexiones entre los nodos. Cualquier posición del 
+terreno es válido, tanto para los agentes como para el resto de las entidades, pero a la 
+hora de generar la percepción, éstos seran asociados con el nodo más cercano a la 
+posición en la que se encuentran. El grafo es generado gracias a un \textit{plugin} 
+realizado por \textit{Aron Granberg}, llamado \textbf{A* Pathfinding Project} 
+\footnote{Para más información sobre este proyecto, dirigirse a 
+\url{http://arongranberg.com/astar/features}}.
+
+\subsection{Agentes}
+
+\label{sec:agentes}
+
+En esta sección se describirán más detalladamente las características de los agentes, 
+sus propiedades y métodos.
+
+El agente tiene como propiedades la vida actual y máxima, los elementos 
+(\texttt{EObject}) que lleva en la mochila, la velocidad máxima que puede alcanzar al
+moverse, la profundidad de visión (es una magnitud de distancia, que representa la máxima 
+distancia a la que se pueden encontrar los objetos que el agente puede percibir), y el
+alcance del agente (la máxima distancia que pueden tener los objetos si el agente quiere
+levantarlos).
+
+\subsubsection{Percepción}
+
+Los agentes son las únicas entidades que pueden solicitar percepciones. Una percepción
+es un conjunto de elementos que pueden ser percibidos, que se encuentran dentro de un
+radio predeterminado para cada agente. Estos elementos pueden ser tanto otras entidades
+como los nodos. Cada uno de estos elementos luego es consultado por las caracteristicas
+que son de interés para el agente, lo que es devuelto en el formato en el que se envia
+la percepción al agente. A su vez, la percepción también incluye información propia del
+agente que no es visible por otros agentes en su propia percepción, como la vida, o los
+elementos que lleva en su mochila.
+
+Más específicamente, existe una interfaz llamada \texttt{IPerceivableEntity}, la cual es
+implementada por todas aquellas clases que puedan ser percibidos, cuya única 
+característica es que tienen un método que devuelve la representación final de ese 
+objeto para ser luego enviado dentro de la percepción. Como se explico antes,
+estas son las entidades y los nodos. Con respecto a los nodos, al estar utilizando el 
+plugin \textbf{A* Pathfinding Project}, se decidió realizar una \textit{cáscara}, esto 
+es, una clase que contiene en una propiedad a una variable de tipo \texttt{GridNode},
+que es la clase provista por dicho \textit{plugin} para representar a los nodos. Esta 
+clase hereda de \texttt{IPerceivableEntity}, por lo que implementa el método que genera
+la representación final del nodo. La clase \texttt{Entity} también hereda de 
+\texttt{IPerceivableEntity}, por lo que toda clase de 
+la jerarquía de clases de la Figura \ref{fig:diagramaDeClasesEntidades} lo implementa.
+
+La manera de percibir las entidades es a través de la utilización de la función
+\texttt{OverlapSphere}, la cual detecta todos los \texttt{Collider} que se encuentran 
+dentro de una determinada esfera, la cual es casteada en la posición del agente con un
+determinado radio, el cual es la profundidad de visión. Esta función devuelve una lista
+con dichos colliders, los cuales se chequea que sean del tipo buscado, y se obtiene su
+objeto de clase \texttt{Entity} asociado. 
+
+Para los nodos, se hace un recorrido \textit{primero en anchura} sobre los nodos, 
+partiendo del nodo más cercano al agente, hasta una determinada profundidad. Luego se 
+chequea si las posiciones de los nodos se encuentran dentro del rango visible.
+
+\subsubsection{Acciones}
+
+Actualmente las acciones posibles para los agentes son:
+
+\begin{itemize}
+\ttfamily
+\item noop
+\item move
+\item pickup
+\item drop
+\end{itemize}
+
+\section{Futuras modificaciones}
+
+\section{Conclusión}
+
+\end{document}

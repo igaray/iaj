@@ -25,6 +25,8 @@ public interface IEngine{
 		get;
 	}
 	
+	// determina si el juego está corriendo en modo prueba (desde unity, actualmente con la escena 
+	// leotest) o si está corriendo desde el servidor.
 	bool test
 	{
 		get;

@@ -5,6 +5,7 @@ using Pathfinding;
 using Pathfinding.Nodes;
 using UnityEngine;
 
+// The perceivable node class is a shell for grid nodes
 public class PerceivableNode : IPerceivableEntity
 {
 	public GridNode _node;
@@ -14,8 +15,7 @@ public class PerceivableNode : IPerceivableEntity
 		this._node = node;
 	}
 	
-	public string toProlog(){
-		
+	public string toProlog(){		
 		List<int> neighbors = connections();
 		return String.Format("node({0}, {1}, {2})", 
 			this._node.GetIndex(), 
@@ -32,6 +32,7 @@ public class PerceivableNode : IPerceivableEntity
 		return indexes;
 	}
 	
+	// this does the same as the previous method, but without the need of creating a perceivable node object
 	public static List<int> connections(GridNode node){
 		Node[] nodes = node.connections;
 		List<int> indexes = new List<int>();
@@ -41,7 +42,7 @@ public class PerceivableNode : IPerceivableEntity
 		return indexes;
 	}
 	
-	// devuelve un iterador para los vecinos del nodo
+	// devuelve un iterador para los vecinos del nodo, para ser usado en un foreach
 	public IEnumerator<Node> GetEnumerator(){
 		GridGraph graph            = AstarPath.active.astarData.gridGraph;
 		Node[]    nodes            = graph.nodes;
