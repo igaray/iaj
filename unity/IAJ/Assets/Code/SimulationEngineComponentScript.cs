@@ -22,19 +22,14 @@ public class SimulationEngineComponentScript : MonoBehaviour, IEngineComponent{
     public  string           outputText = "";
 	public  GameObject		 agentPrefab, goldPrefab;
 	public  IEngine		  	 engine
-	{
-		get
-		{
-			return ss;
-		}
-	}
+    	{
+    		get { return ss; }
+    	}
 
-    
     // Use this for initialization
     void Awake () {
         ss = new SimulationState("C:\\config.xml", goldPrefab);
         se = new SimulationEngine(ss);
-
         InvokeRepeating( "DoWork", 0, 0.1f );
     }
     
@@ -64,9 +59,7 @@ public class SimulationEngineComponentScript : MonoBehaviour, IEngineComponent{
         se.stop();
     }
 
-
     void DoWork() {
-
         // Get all the text out of the queue.
         string str;
         while (ss.stdout.NotEmpty()) {
@@ -75,6 +68,7 @@ public class SimulationEngineComponentScript : MonoBehaviour, IEngineComponent{
             }
         }
 
+        // Try to keep the implementation of these methods fast.
         se.generatePercepts();
         se.handleActions();
         se.instantiateAgents(agentPrefab);

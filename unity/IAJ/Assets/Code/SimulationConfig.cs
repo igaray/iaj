@@ -32,11 +32,11 @@ public class SimulationConfig {
         }
         catch (Exception) {
             Debug.LogError("No config file found.");
-            actionDurations["noop"]       = 1f;
-            actionDurations["move"]       = 1f;
-            actionDurations["pickup"]     = 1f;
-            actionDurations["drop"]       = 1f;
-            actionDurations["attack"]     = 1f;
+            actionDurations["noop"]   = 1f;
+            actionDurations["move"]   = 1f;
+            actionDurations["pickup"] = 1f;
+            actionDurations["drop"]   = 1f;
+            actionDurations["attack"] = 1f;
         }
     }
 }

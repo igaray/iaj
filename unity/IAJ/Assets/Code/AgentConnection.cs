@@ -41,7 +41,6 @@ public class AgentConnection {
         // SIMULATION 
         quit                   = false;
         simulationState        = ss;
-
 	}
 
     public void start() {

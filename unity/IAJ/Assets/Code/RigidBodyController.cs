@@ -59,7 +59,6 @@ public class RigidBodyController : MonoBehaviour {
  
 	    // We apply gravity manually for more tuning control
 	    rigidbody.AddForce(new Vector3 (0, -_gravity * rigidbody.mass, 0));
- 
 	    grounded = false;
 	}
 
@@ -76,7 +75,6 @@ public class RigidBodyController : MonoBehaviour {
 			movementStoppedInvoked = true;
 			Invoke("movementStopped", 0.2f);
 		}
-
 	}
 	
 	void movementStopped(){
@@ -97,5 +95,4 @@ public class RigidBodyController : MonoBehaviour {
 		moving         = true;
 		this.target    = target;
 	}
- 
 }
