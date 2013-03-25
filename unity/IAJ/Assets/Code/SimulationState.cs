@@ -15,7 +15,6 @@ public class SimulationState : IEngine{
     public  SimulationConfig             config;
     public  Dictionary<string, int>      agentIDs; // nombres -> ids
     public  Dictionary<int, AgentState>  agents;   // ids -> estado interno del agente
-//    public Dictionary<int, ObjectState> objects;
     public  MailBox<Action>              readyActionQueue;
     public  MailBox<PerceptRequest>      perceptRequests;
 	public  MailBox<InstantiateRequest>  instantiateRequests;
@@ -25,50 +24,31 @@ public class SimulationState : IEngine{
 	private Dictionary <string, Gold>	 coinsIn;
 	private Dictionary <string, float>   actionDurationsDic;
 	public  IDictionary<string, Gold>	 coins
-	{
-		get
-		{
-			return coinsIn;
-		}
-		set
-		{
-			coinsIn = value as Dictionary <string, Gold>;
-		}
-	}
+    	{
+    		get { return coinsIn; }
+    		set { coinsIn = value as Dictionary <string, Gold>; }
+    	}
 	
 	public float _delta
-	{
-		get
-		{
-			return delta;
-		}
-		set
-		{
-			delta = value;
-		}
-	}
+    	{
+    		get { return delta; }
+    		set { delta = value; }
+    	}
 	
 	public IDictionary<string, float> actionDurations
-	{
-		get
-		{
-			return config.actionDurations;
-		}
-	}
+    	{
+    		get { return config.actionDurations; }
+    	}
+
 	public bool test
-	{
-		get
-		{
-			return false;
-		}
-	}
+    	{
+    		get { return false; }
+    	}
 		
     public SimulationState(string ConfigurationFilePath, GameObject gold = null) {
         config               = new SimulationConfig("config.xml");
 		agentIDs             = new Dictionary<string, int>       ();
 		agents               = new Dictionary<int,    AgentState>();
-
-        //objects              = new Dictionary<int, ObjectState>();
 		coins				 = new Dictionary<string, Gold>      ();
         readyActionQueue     = new MailBox   <Action>            (true);
         perceptRequests      = new MailBox   <PerceptRequest>    (true);
@@ -82,10 +62,6 @@ public class SimulationState : IEngine{
         bool result = false;
 		Agent agent = agents[action.agentID].agentController;
         switch (action.type) {
-            //case ActionType.: {
-            //    result = ;
-            //    break;
-            //}
             case ActionType.noop: {
                 result = true;
                 break;
@@ -139,7 +115,6 @@ public class SimulationState : IEngine{
                 break;
             }
         }
-        
         stdout.Send(String.Format("Agent {0} performs action {1} of type {2}", 
             action.agentID, 
             action.actionID, 
@@ -148,7 +123,6 @@ public class SimulationState : IEngine{
 	
 	// this might not be necessary
 	public void initializeCoins(){
-		
 		coins["gold1"]  = Gold.Create (goldPrefab,  new Vector3(6,  0, 15), this, "", "gold1",  2);
 		coins["gold2"]  = Gold.Create (goldPrefab,  new Vector3(22, 0, 4 ), this, "", "gold2",  2);
 		coins["gold3"]  = Gold.Create (goldPrefab,  new Vector3(27, 0, 15), this, "", "gold3",  2);
@@ -159,11 +133,9 @@ public class SimulationState : IEngine{
 		coins["gold8"]  = Gold.Create (goldPrefab,  new Vector3(12, 0, 18), this, "", "gold8",  2);
 		coins["gold9"]  = Gold.Create (goldPrefab,  new Vector3(26, 0, 6 ), this, "", "gold9",  2);
 		coins["gold10"] = Gold.Create (goldPrefab,  new Vector3(11, 0, 4 ), this, "", "gold10", 2);
-		
 	}
 	
 	public void addGold(Gold gold){
-		
 		string name = "gold" + coins.Count;
 		gold._name  = name;
 		coins[name] = gold;

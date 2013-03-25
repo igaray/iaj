@@ -34,10 +34,9 @@ public class Percept {
 			// xml
 			throw new NotImplementedException();
 		}
-		
 	}
 
-	public override string ToString(){
+	public override string ToString() {
 		
 		return p + ".\r"; 
 		
@@ -45,11 +44,11 @@ public class Percept {
 	}
 	
 	// TODO: revisar si esto va
-	public void addEntities(IPerceivableEntity e){
+	public void addEntities(IPerceivableEntity e) {
 		elements.Add(e);
 	}
 	
-	public void addEntitiesRange(List<IPerceivableEntity> list){
+	public void addEntitiesRange(List<IPerceivableEntity> list) {
 		elements.AddRange(list);
 	}
 }

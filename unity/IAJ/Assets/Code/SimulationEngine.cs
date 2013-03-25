@@ -15,7 +15,6 @@ public class SimulationEngine {
 
     public SimulationEngine(SimulationState ss) {
         simulationState   = ss;
-
         connectionHandler = new ConnectionHandler(ss);
     }
 
@@ -72,6 +71,7 @@ public class SimulationEngine {
 					agents[agentID].lastAction = currentAction;
                     if (simulationState.executableAction(currentAction)) {
                         simulationState.stdout.Send(String.Format("AH: the action is executable.\n"));
+                        // Long story...
                         //agents[agentID].results.Send(ActionResult.success);
                         agents[agentID].lastActionResult = ActionResult.success;
                         simulationState.applyActionEffects(currentAction);

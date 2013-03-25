@@ -18,4 +18,3 @@ public class PerceptRequest {
         this.agentPerceptMailbox = APM;
     }
 }
-
