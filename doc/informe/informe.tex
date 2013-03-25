@@ -86,8 +86,7 @@ la característica de ser elementos grandes, a los cuales los agentes podran ing
 sea, representan un volumen en el mundo. Físicamente son representados por un 
 \texttt{GameObject} sin \texttt{Collider} ni textura, con forma de ortoedro. Por esto, puede representar una zona en el mundo.
 
-La implementación actual de esta clase es \texttt{Inn}, el cual representaría un hotel
-en el mundo. En el juego de prueba actual, se puede observar un objeto vacío como fue
+La implementación actual de esta clase es \texttt{Inn}, el cual representaría un hotel. En el juego de prueba actual, se puede observar un objeto vacío como fue
 descripto, el cual está rodeado por paredes. Éstas simplemente representan obstáculos 
 para el agente, pero no mantiene información asociada ni objeto de tipo \texttt{Entity}.
 A un \texttt{Building} se le puede consultar por si una determinada posición se 
@@ -103,11 +102,11 @@ detalle en la sección \ref{sec:agentes}.
 \subsection{Terreno}
 
 El terreno físicamente es un terreno común de Unity. Para poder ser utilizado por los
-agentes, el terreno tiene asociado un grafo con forma de grilla. Ésta esta formada 
+agentes, el terreno tiene asociado un grafo con forma de grilla. Ésta está formada 
 por un conjunto de nodos, los cuales tienen una posición asociada, y un conjunto de 
 aristas, las cuales representan las conexiones entre los nodos. Cualquier posición del 
 terreno es válido, tanto para los agentes como para el resto de las entidades, pero a la 
-hora de generar la percepción, éstos seran asociados con el nodo más cercano a la 
+hora de generar la percepción, éstos serán asociados con el nodo más cercano a la 
 posición en la que se encuentran. El grafo es generado gracias a un \textit{plugin} 
 realizado por \textit{Aron Granberg}, llamado \textbf{A* Pathfinding Project} 
 \footnote{Para más información sobre este proyecto, dirigirse a 
@@ -174,8 +173,56 @@ Actualmente las acciones posibles para los agentes son:
 \item drop
 \end{itemize}
 
+Las acciones pueden tener parámetros, y tienen un conjunto de precondiciones y 
+postcondiciones que se 
+chequean y ejectuan en el momento que son recibidas por el sistema. Ésto se observa en
+el código del agente, más precisamente en la clase \texttt{Agent}, donde por cada acción
+hay dos métodos, los cuales determinan las precondiciones y las postcondiciones.
+
+\texttt{noop} es la acción nula, por lo que no genera ningún efecto, y puede ser aplicada 
+en cualquier momento. \texttt{move} es la acción de movimiento, que recibe como 
+parámetro el nombre del nodo al cual debe moverse, y cuya precondición es que el agente
+se encuentre en un nodo adyacente a éste.
+
+\texttt{pickup} tiene como precondición que el identificador de objeto que es pasado por 
+parámetro sea un objeto válido, y que se encuentre dentro de un radio determinado. Este
+radio es mayor al tamaño de los nodos, por lo que encontrarse en el mismo nodo que el 
+objeto alcanza para que el agente pueda levantar el objeto. Como postcondición, se 
+agrega el objeto al \textit{backpack} del agente, y se deshabilita su 
+\texttt{GameObject}.
+
+Finalmente, \texttt{drop} tiene como precondición que el identificador de objeto pasado
+por parámetro sea un objeto válido que se encuentre en el \textit{backpack} del agente.
+Su postcondición es que el objeto vuelva a ser habilitado, se cambia su posición a la 
+actual del agente, y se le agrega una determinada fuerza para que el objeto se mueva 
+fuera de la posición del agente.
+
+
 \section{Futuras modificaciones}
 
+El sistema fue pensado para que sea fácil agregar nuevos clases dentro del esquema 
+planteado, así como nuevas acciones. Sin embargo, el principal trabajo a realizar se 
+encuentra en el diseño de un mundo que pueda generar un interés desde el punto de vista
+del estudio de los sistemas multi-agente, el cual cumpla con las condiciones planteadas
+por el sistema, como su espacio tridimensional y su manejo del ciclo de acción y 
+percepción en tiempo real. 
+
 \section{Conclusión}
+
+El desarrollo del sistema conllevó un arduo trabajo sobre una plataforma que presenta
+sus beneficios en el área del desarrollo ágil de juegos, pero que sin embargo presenta
+también sus limitaciones en el uso de herramientas externas, o principalmente en el uso
+de estrategias de desarrollo fuera de su propuesta, a pesar de soportar sí lenguajes
+y una \textit{API} poderosos. Al haber estado fundamentalmente desarrollando del lado del
+motor de un juego, nos vimos teniendo dificultades por no seguir con el modo de 
+desarrollar juegos que propone \textbf{Unity 3D}. Por esto quedó un diseño desacoplado
+entre motor de conexión con los agentes, y la representación y simulación del mundo.
+
+De cualquier manera, creemos que la etapa de luchar contra estos problemas ya pasó, ya 
+que los próximos pasos a realizar no dependen de las modificaciones en la arquitectura
+básica del sistema, sino de la implementación de un sistema multi-agente por encima de 
+lo provisto. Por esto, esperamos que sea fructífera la planeada aplicacación del sistema
+en la cátedra de Inteligencia Artificial, para poder observar el producto de nuestro 
+trabajo en funcionamiento.
 
 \end{document}
