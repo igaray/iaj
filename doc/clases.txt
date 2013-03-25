@@ -1,17 +1,27 @@
 Notas generales:
-- las variables que arrancan con _ (underscore) son variables que quedan fijas durante la ejecución.
+
+Las variables que arrancan con _ (underscore) son variables que quedan fijas
+durante la ejecución.
 
 * Interface IPerceivableEntity
 
-Esta interface contienen únicamente el método perception(), que devuelve un diccionario (actualmente) con lo que se percibe del objeto. 
+Esta interface contienen únicamente el método perception(), que devuelve un
+diccionario (actualmente) con lo que se percibe del objeto. 
 
 * PerceivableNode
 
-Es un IPerceivableEntity, por lo que tiene el método perception(). Es una clase cápsula, que mantiene un GridNode del cual genera la percepción. Tal vez haya que eliminarlos cuando se dejan de usar, o guardarlos, en vez de dejarselos al GC, ya que se actualmente se generan siempre que se pide una percepción.
+Es un IPerceivableEntity, por lo que tiene el método perception(). Es una clase
+cápsula, que mantiene un GridNode del cual genera la percepción. Tal vez haya
+que eliminarlos cuando se dejan de usar, o guardarlos, en vez de dejarselos al
+GC, ya que se actualmente se generan siempre que se pide una percepción.
 
 * Entity
 
-Se trata de cualquier entidad del mundo. Hereda de IPerceivableEntity, por lo que genera percepción, y de MonoBehaviour, por lo que puede tener script que sea ejecutado por unity. Van a estar asociados a objetos en el mundo, los cuales tendrán su Transform, GameObject y todo el resto. Mantienen algo de información básica, así como el creador del objeto.
+Se trata de cualquier entidad del mundo. Hereda de IPerceivableEntity, por lo
+que genera percepción, y de MonoBehaviour, por lo que puede tener script que sea
+ejecutado por unity. Van a estar asociados a objetos en el mundo, los cuales
+tendrán su Transform, GameObject y todo el resto. Mantienen algo de información
+básica, así como el creador del objeto.
 
 * EObject (EntityObject)
 
@@ -19,27 +29,51 @@ Hereda de Entity, se trata de todos los objetos inanimados movibles del mundo.
 
 * Building
 
-Hereda de Entity. Engloba a todos los objetos inanimados inmóviles del mundo. Los agentes y las cosas pueden estar dentro de él. Tiene asociado una variable bounds, que es la que indica la "caja" que lo representa, y, dada una posición, se puede saber si se encuentra dentro de él o no. En el futuro se puede agregar la funcionalidad de revisar si un objeto se encuentra totalmente adentro, se intersecta o se encuentra totalmente afuera.
+Hereda de Entity. Engloba a todos los objetos inanimados inmóviles del mundo.
+Los agentes y las cosas pueden estar dentro de él. Tiene asociado una variable
+bounds, que es la que indica la "caja" que lo representa, y, dada una posición,
+se puede saber si se encuentra dentro de él o no. En el futuro se puede agregar
+la funcionalidad de revisar si un objeto se encuentra totalmente adentro, se
+intersecta o se encuentra totalmente afuera.
 
-Actualmente la manera de manejarlo difiere de los otros agentes, ya que se encuentra asociado a un gameObject cuyo collider y mesh son deshabilitados antes de iniciar el juego. Por esto, el script tiene que estar asociado a un objeto vacío, de tipo Box, que simule estar en el mismo lugar que el objeto visual.
+Actualmente la manera de manejarlo difiere de los otros agentes, ya que se
+encuentra asociado a un gameObject cuyo collider y mesh son deshabilitados antes
+de iniciar el juego. Por esto, el script tiene que estar asociado a un objeto
+vacío, de tipo Box, que simule estar en el mismo lugar que el objeto visual.
 
 * Agent
 
-Actualmente es el único agente posible, pero la idea sería que sea una clase abstracta que englobe a todos los tipos de agentes que pueda llegar a haber.
+Actualmente es el único agente posible, pero la idea sería que sea una clase
+abstracta que englobe a todos los tipos de agentes que pueda llegar a haber.
 
-Cuenta con primitivas de acción, como movimiento, tomar objetos, tirarlos, cuyos resultados se mostrarán en el mundo. A su vez, cuenta con el método perceive(Percept p), que genera la percepción, la cual se guarda en el objeto Percept, que actualmente almacena una lista de listas de IPerceivableEntity. 
+Cuenta con primitivas de acción, como movimiento, tomar objetos, tirarlos, cuyos
+resultados se mostrarán en el mundo. A su vez, cuenta con el método
+perceive(Percept p), que genera la percepción, la cual se guarda en el objeto
+Percept, que actualmente almacena una lista de listas de IPerceivableEntity. 
 
-Cuenta también con primitivas de manejo de las variables internas del agente, como la vida. Esta se maneja a través de la variable life, y lifeTotal. Otra variable importante es _depthOfSight, que indica cual es el radio observable para el agente, medido en nodos. Mantiene también en backpack los objetos que levantó.
+Cuenta también con primitivas de manejo de las variables internas del agente,
+como la vida. Esta se maneja a través de la variable life, y lifeTotal. Otra
+variable importante es _depthOfSight, que indica cual es el radio observable
+para el agente, medido en nodos. Mantiene también en backpack los objetos que
+levantó.
 
 * Gold e Inn
 
-Modelan objetos particulares del juego. El único EObject actual es Gold, que representa un tesoro en el mundo, y el único Building es Inn, que representa un hotel. Inn tiene una función para curar a un agente, que por ahora no se utiliza.
+Modelan objetos particulares del juego. El único EObject actual es Gold, que
+representa un tesoro en el mundo, y el único Building es Inn, que representa un
+hotel. Inn tiene una función para curar a un agente, que por ahora no se
+utiliza.
 
 * Percept
 
-Este objeto es el que solicita en su creación al agente su percepción, y la almacena. Cuenta con los métodos para convertirlo al formato de salida del simulador, o sea, la manera en que se comunicará con los procesos que modelen a los agentes. Por ahora sólo será Prolog.
+Este objeto es el que solicita en su creación al agente su percepción, y la
+almacena. Cuenta con los métodos para convertirlo al formato de salida del
+simulador, o sea, la manera en que se comunicará con los procesos que modelen
+a los agentes. Por ahora sólo será Prolog.
 
 * RigidBodyController
 
-Es el módulo de movimiento de los agentes. Lo soluciona a partir de RigidBodies, aplicándoles una determinada fuerza a éstos para moverlos. En el futuro esto puede cambiar, ya que no es la manera ideal de resolverlo.
+Es el módulo de movimiento de los agentes. Lo soluciona a partir de RigidBodies,
+aplicándoles una determinada fuerza a éstos para moverlos. En el futuro esto
+puede cambiar, ya que no es la manera ideal de resolverlo.
 

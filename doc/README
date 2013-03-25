@@ -1,91 +1,4 @@
 
-## MailBox
-
-MailBoxes are used to implement communication channels or mailboxes 
-between threads.
-The MailBox is a communication and synchronization mechanism for 
-threads implemented via a partial and poor implementation of a 
-concurrent queue.
-It is implemented because .NET 2.0 does not have concurrent containers
-in the framework library.
-
-The MailBox has three main methods, Recv, NBRecv and Send.
-These are thread-safe via the lock statement.
-
-In short: 
-- Send puts a message in the MailBox.
-- Recv takes one out. If the MailBox is empty, it will wait until one 
-  is available. 
-- NBRecv does the same as Recv but does does not block, it will return 
-  immediately if the MailBox is empty.
-
-### Implementation:
-
-In addition to wrapping both Enqueue and Dequeue method bodies in lock
-statements, the MailBox instance maintains a semaphore, with an
-initial value of 0, and a maximum value of Int32.MaxValue. If the
-semaphore is released more than Int32.MaxValue times, an exception is
-thrown and the program explodes.
-
-This semaphore is released (incremented) on every dequeue, and waited
-on (decremented) on every dequeue done by the Recv method.
-
-The Dequeue method will wait on the semaphore, to make sure that at
-least one item is present in the queue.  Once the semaphore is
-signaled, it will dequeue the element and return the element.
-
-### Important note:
-
-The intended use for this class is for a many writers-one reader
-scheme, and furthermore, the reader must either use the Recv method
-or the NBRecv method exclusively, for reasons detailed below.
-
-The NBRecv version has its method body surrounded by a lock statement,
-but inside it tests the number of elements in the queue and returns
-false if the queue is empty, and conditionally dequeue an item if
-there was at least one element in the queue.
-However, it does not decrement the semaphore. 
-
-This means that if both the Recv and NBRecv methods are used, the 
-semaphore value will not reflect the number of elements in the message
-queue, and a deadlock may arise. 
-
-The following scenario is a possibility: two threads, A and B, and one
-item in the queue.  Thread A calls NBRecv, acquires the instance lock,
-dequeues an item  and exits. The queue is now empty but the
-semaphore's value is 1.  Thread B calls Recv, with the understanding
-that Recv will block until an item can be dequeued. Since the
-semaphore is signaled, it passes  the WaitOne call but the queue is
-empty, and so it will not be able to dequeue anything.
-
-One possibility to fix this is to perform a WaitOne on the semaphore
-after NBRecv has dequeued the item, expecting that the semaphore will 
-have a value of at least 1, and so the WaitOne call will not block.
-This is incorrect and hacky, and the possibility of deadlock arises. 
-
-The following scenario is a possibility: two threads, A and B, and one
-item in the queue. 
-Thread A calls NBRecv, enters the instance lock and begins to deque 
-the item. It checks whether the item count is greater than 0, and 
-proceeds to call the queue's Dequeue method. 
-During the time thread A spends inside the lock, thread B calls the 
-Recv method and waits on the semaphore. Since thread A has not yet 
-waited on the semaphore, it's value is greater than 0 and thread B 
-passes the call to WaitOne on said semaphore. It then encounters the
-instance lock and blocks, supposedly until thread A releases the 
-instance lock. 
-However, thread A is now cleaning up after the dequeue and wants to 
-decrement the semaphore so that its value reflects the item count. 
-Since thread B already waited on it, thread A will now block on the 
-call to WaitOne, supposedly until someone else signals the semaphore.
-But no one else *can* signal the semaphore, because to do so they must
-first acquire the instance lock now held by thread A to be able to 
-enqueue an item. Deadlock ensues.
-
-Since in this case the object lock is first acquired and then the
-semaphore waited on, in inverse order of the NBRecv implementation,
-the posibility of a block cycle and thus deadlock arises.
-
 ## SimulationEngineApp
 
 The application starts at the Main method of SimulationEngineApp.
@@ -97,13 +10,6 @@ Actions) which is filled with actions by the agent connection handlers
 (AgentConnection), called unityActionQueue.
 It is so called because this is the queue Unity will pull actions from
 to apply their effect. 
-
-## SimulationEngine
-
-The SimulationEngine object does not run a thread, it just
-encapsulates all the objects that make up the engine. When the
-SimulationEngine instance is created, it instantiates an ActionHandler
-and a ConnectionHandler.
 
 ## ActionHandler
 
@@ -125,16 +31,3 @@ This is accomplished by inserting an ActionResult object in the
 action result queue of the corresponding agent's AgentConnection, 
 whether or not the action is enqueued in the unity action queue.
 
-## ConnectionHandler
-
-## AgentConnection
-
-## AgentState
-
-## WorldState
-
-## Percept
-
-## Action
-
-## ObjectState
