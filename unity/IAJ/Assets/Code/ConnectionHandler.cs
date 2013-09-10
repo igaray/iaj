@@ -37,22 +37,22 @@ public class ConnectionHandler {
     }
 
     public void start() {
-        simulationState.stdout.Send("CH: starting thread.\n");
+        //simulationState.stdout.Send("CH: starting thread.\n");
         connectionHandlerThread.Start();
     } 
 
     public void stop() {
-        simulationState.stdout.Send("CH: stopping...\n");
+        //simulationState.stdout.Send("CH: stopping...\n");
 
         tcpListener.Stop();
 
-        simulationState.stdout.Send("CH: tcp listener stopped...\n");
+        //simulationState.stdout.Send("CH: tcp listener stopped...\n");
 
         foreach (AgentConnection ac in agentConnections) {
             ac.stop();
         }
 
-        simulationState.stdout.Send("CH: agents stopped...\n");
+        //simulationState.stdout.Send("CH: agents stopped...\n");
 
         // Setting quit to true is rather useless, because the 
         // connection handler's thread will almost surely blocked in 
@@ -63,10 +63,10 @@ public class ConnectionHandler {
             connectionHandlerThread.Abort();
         }
         catch (ThreadAbortException) {
-            simulationState.stdout.Send("Connection handler thread abort failed.\n");
+            //simulationState.stdout.Send("Connection handler thread abort failed.\n");
         }
 
-        simulationState.stdout.Send("CH: connection thread aborted...\n");
+        //simulationState.stdout.Send("CH: connection thread aborted...\n");
     }
 
     public void run() {
@@ -75,7 +75,7 @@ public class ConnectionHandler {
         AgentConnection    agentConnection;
 		InstantiateRequest request;
 
-        simulationState.stdout.Send("CH: entering main loop\n");
+        //simulationState.stdout.Send("CH: entering main loop\n");
 
         tcpListener.Start();
 
@@ -84,7 +84,7 @@ public class ConnectionHandler {
             tcpClient       = tcpListener.AcceptTcpClient();
             agentConnection = new AgentConnection(simulationState, tcpClient);
 
-            simulationState.stdout.Send(String.Format("CH: accepted client.\n"));
+            //simulationState.stdout.Send(String.Format("CH: accepted client.\n"));
 
 			if (agentConnection.init()) {
 				agentConnections.Add(agentConnection);
@@ -106,7 +106,7 @@ public class ConnectionHandler {
                 }
 			}
         }
-        simulationState.stdout.Send("CH: exit main loop.\n");
+        //simulationState.stdout.Send("CH: exit main loop.\n");
     }
 }
 

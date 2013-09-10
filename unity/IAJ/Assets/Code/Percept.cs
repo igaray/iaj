@@ -12,19 +12,19 @@ public class Percept {
 	// the perception is created and generated here
 	public Percept(SimulationState state, int agentID, bool inProlog = true) {
 		
+		//SimulationEngineComponentScript.ss.stdout.Send("entro al constructor de Percept");
+		
 		if (inProlog){
 			auxList = new List<string>();
-			
+			auxList.Add("time("+SimulationState.getInstance().gameTime+")");			
 			if (state.agents.ContainsKey(agentID)) {
-				state.agents[agentID].agentController.perceive(this); 
-				
-				foreach(IPerceivableEntity e in elements){				
-					aux = e.toProlog();	
-					auxList.Add(aux);
+				state.agents[agentID].agentController.perceive(this); 				
+				foreach(IPerceivableEntity e in elements){					
+					aux = e.toProlog();					
+					auxList.Add(aux);									
 				}
-				auxList.Add(state.agents[agentID].agentController.selfProperties());
-				p = PrologList.AtomList<string>(auxList);
-				
+				//auxList.Add(state.agents[agentID].agentController.selfProperties());
+				p = PrologList.AtomList<string>(auxList);				
 			}
 			else {
 				Debug.LogError("Percept creation fail.");

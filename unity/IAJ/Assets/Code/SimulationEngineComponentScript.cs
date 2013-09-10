@@ -13,7 +13,7 @@ using System.Xml;
 public class SimulationEngineComponentScript : MonoBehaviour, IEngineComponent{
 
     // SIMULATION
-    private SimulationState  ss;
+    public static SimulationState  ss;
     private SimulationEngine se;
 
     // UNITY GUI
@@ -36,6 +36,9 @@ public class SimulationEngineComponentScript : MonoBehaviour, IEngineComponent{
         se = new SimulationEngine(ss);
 
         InvokeRepeating( "DoWork", 0, 0.1f );
+		
+		//se.instantiateDummyAgent("dummy1", agentPrefab);
+		//se.instantiateDummyAgent("dummy2", agentPrefab);
     }
     
     // Update is called once per frame
@@ -45,20 +48,44 @@ public class SimulationEngineComponentScript : MonoBehaviour, IEngineComponent{
     void OnGUI () {
         GUI.skin = mySkin;
         
+		/*
         scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUILayout.Width(512), GUILayout.Height(512));
         GUILayout.Box(outputText);
         GUILayout.EndScrollView();
-
-        if (GUI.Button(new Rect(4,512,128,20), "Start")) {
+		*/
+		
+        if (GUI.Button(new Rect(4,682,128,20), "Start")) {			
             ss.stdout.Send("Starting simulation engine...\n");
             se.start();
         }
 
-        if (GUI.Button(new Rect(132,512,128,20), "Stop")) {
+        if (GUI.Button(new Rect(132,682,128,20), "Stop")) {
             ss.stdout.Send("Stopping simulation engine...\n");
             se.stop();
-        }
+        }		
+		
     }
+	
+	//public GUIStyle timeLabel;
+	
+	void WindowFunction(int windowId) {				
+		GUILayout.BeginVertical();
+			GUILayout.Label(SimulationState.getInstance().gameTime.ToString());
+			foreach (AgentState agentState in SimulationState.getInstance().agents.Values) {
+				AgentPanel(agentState.agentController);
+			}
+		GUILayout.EndVertical();
+	}
+	
+	void AgentPanel(Agent agent) {
+		//GUILayout.BeginArea(new Rect(0, 45, 160, 270));
+		GUILayout.BeginVertical();
+			//GUILayout.Box(new Rect(0,0,160,270));
+			GUILayout.Box(agent._name);			
+			//GUILayout.Label(new Rect(0,0,160,40), agent._name);
+			//GUILayout.Label(agent._name);
+		GUILayout.EndVertical();
+	}
 
     void OnApplicationQuit() {
         se.stop();
@@ -74,7 +101,8 @@ public class SimulationEngineComponentScript : MonoBehaviour, IEngineComponent{
                 outputText += str;
             }
         }
-
+		
+		se.dynamicEnvUpdate();
         se.generatePercepts();
         se.handleActions();
         se.instantiateAgents(agentPrefab);

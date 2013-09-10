@@ -71,12 +71,12 @@ public class Engine : MonoBehaviour, IEngine, IEngineComponent {
 		durations["pickup"] = 0.5f;
 		durations["drop"]   = 0.5f;
 		
-		agents [0] = Agent.Create(agent, new Vector3(20, 23, 1), this, "", "agent1", 100);
-		agents [1] = Agent.Create(agent, new Vector3(30, 10, 1), this, "", "agent2", 100);
-		agents [2] = Agent.Create(agent, new Vector3(10, 30, 1), this, "", "agent3", 100);
-		agents [3] = Agent.Create(agent, new Vector3(22, 2, 1),  this, "", "agent4", 100);
-		agents [4] = Agent.Create(agent, new Vector3(13, 10, 1), this, "", "agent5", 100);
-		agents [5] = Agent.Create(agent, new Vector3(14, 30, 1), this, "", "agent6", 100);
+		agents [0] = Agent.Create(agent, new Vector3(20, 23, 1), this, "", "agent1", 1000);
+		agents [1] = Agent.Create(agent, new Vector3(30, 10, 1), this, "", "agent2", 1000);
+		agents [2] = Agent.Create(agent, new Vector3(10, 30, 1), this, "", "agent3", 1000);
+		agents [3] = Agent.Create(agent, new Vector3(22, 2, 1),  this, "", "agent4", 1000);
+		agents [4] = Agent.Create(agent, new Vector3(13, 10, 1), this, "", "agent5", 1000);
+		agents [5] = Agent.Create(agent, new Vector3(14, 30, 1), this, "", "agent6", 1000);
 				
 //		coins["gold1"]  = Gold.Create (gold,  new Vector3(6,  0, 15), this, "", "gold1",  2);
 //		coins["gold2"]  = Gold.Create (gold,  new Vector3(22, 0, 4 ), this, "", "gold2",  2);

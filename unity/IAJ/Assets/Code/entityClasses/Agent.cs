@@ -11,13 +11,14 @@ using Pathfinding;
 
 public class Agent : Entity {
 	
-	public  int   lifeTotal = 100;
+	public  int   lifeTotal = 50;
 	private float _nodeSize = 2; 		// size of the node in the world measure
 										// Hardcodeado. Traté de hacerlo andar dinámicamente, pero no pude.
 										// Es el mismo número que el node size definido en el objeto A*, por IDE
 	private float _delta = 0.1f;   		// time between ticks of "simulation"
 	public  int   life;
-
+	public  int   skill = 100;
+	
 	private RigidBodyController       _controller;	
 	private List<PerceivableNode>     nodeList;							// TODO: Borrar. Es para test nomás
 	public  List<EObject>             backpack = new List<EObject>();	
@@ -27,7 +28,8 @@ public class Agent : Entity {
 	
 	public  int   _depthOfSight;		// radius of vision, in nodes
 	public  float _reach   = 1;			// radius of reach (of objects), in world magnitude
-	public  int   velocity = 5;			// TODO: revisar si esto va
+	private bool   toogle = false;
+	//public  int   velocity = 5;			// TODO: revisar si esto va
 	
 	
 	
@@ -44,6 +46,7 @@ public class Agent : Entity {
 		GameObject gameObj    = Instantiate(prefab, position, Quaternion.identity) as GameObject;
 		Agent      agent      = gameObj.GetComponent<Agent>();
 		
+		agent.lifeTotal 	  = lifeTotal;
 		agent.life            = lifeTotal;
 		agent._description    = description;
 		agent._name           = name;
@@ -52,6 +55,32 @@ public class Agent : Entity {
 		agent._type		      = "agent";
 		agent.actionDurations = new Dictionary<string, float>(se.actionDurations); // copio las duraciones de las acciones
 		return agent;
+	}
+	
+	public GUIStyle infoStyle;
+	public GUIStyle nameStyle;	
+	public GUIStyle lifeStyle;
+	
+	void OnGUI () {
+		Vector3 screenPos = Camera.mainCamera.WorldToScreenPoint(transform.position);
+		//GUI.Label(new Rect(screenPos.x, screenPos.y, 10,5), _name);
+		int infoHeight = 25;
+		int infoWidth = 100;
+		Rect infoRect = new Rect(screenPos.x - infoWidth/2, Screen.height - screenPos.y - infoHeight - 15, infoWidth, infoHeight);
+		GUI.BeginGroup(infoRect, infoStyle);
+		GUILayout.BeginVertical(infoStyle, GUILayout.Width(infoWidth));			
+			GUILayout.Label(_name, nameStyle);
+			/*Energy level*/
+			GUILayout.BeginVertical(lifeStyle);
+			int totalLifeWidth = 50;
+			int lifeWidth = (int)(totalLifeWidth*((float)life/lifeTotal));
+			GUILayout.Box("",GUILayout.Width(totalLifeWidth), GUILayout.Height(10));			
+			Rect lastRect = GUILayoutUtility.GetLastRect();
+			lastRect.Set(lastRect.x, lastRect.y, lifeWidth, lastRect.width);
+			GUI.Box(lastRect,"");
+			GUILayout.EndVertical();
+		GUILayout.EndVertical();
+		GUI.EndGroup();
 	}
 	
 	public override void Start(){
@@ -69,11 +98,13 @@ public class Agent : Entity {
 	void execute(){
 		position = transform.position;
 		nodeList = this.perceptNodes();
+		checkInsideBuilding();
 		// TEST
 		if (_engine.test){
 			if (!_controller.moving && nodeList.Count > 1){
 				GridNode node = nodeList[UnityEngine.Random.Range(0, nodeList.Count)]._node;
 				_controller.move((Vector3)node.position);	
+				
 			}
 			List<Gold>  goldList = this.perceptObjects<Gold> ("gold");
 			
@@ -89,16 +120,40 @@ public class Agent : Entity {
 		}
 		// TEST
 		
-	}	
-		
+	}		
+	private void checkInsideBuilding(){
+		SimulationState ss;		
+		ss = (GameObject.FindGameObjectWithTag("GameController").
+			GetComponent(typeof(SimulationEngineComponentScript))
+			as SimulationEngineComponentScript).engine as SimulationState;				
+		//ss.stdout.Send("Inns: "+ss.inns.Values.ToString());
+		int currentNode = (AstarPath.active.GetNearest(this.transform.position).node as GridNode).GetIndex();				
+		if (SimulationState.getInstance().nodeToInn.ContainsKey(currentNode)) {
+			Inn inn = SimulationState.getInstance().nodeToInn[currentNode];
+			inn.heal(this);
+		}
+		/*foreach(Inn inn in ss.inns.Values){					
+			if(inn.isInside(transform.position)){							
+				inn.heal(this);			
+				break;
+			}			
+		}*/
+				
+	}
+	
+	public void noopPosCon() {
+		Invoke("stoppedAction", actionDurations["noop"]);
+	}
+	
 	public bool movePreConf(int node){
-		Node actualNode = AstarPath.active.GetNearest(transform.position).node as GridNode;
+		Node actualNode = AstarPath.active.GetNearest(transform.position).node as GridNode;		
 		return PerceivableNode.connections(actualNode as GridNode).Contains(node);
 //		return true;
 	}
 	
 	public void movePosCond(int node){
-		_controller.move((Vector3)(AstarPath.active.graphs[0].nodes[node].position));	
+		float cost = _controller.move((Vector3)(AstarPath.active.graphs[0].nodes[node].position));
+		subLife((int)(cost+0.5)); //0.5 de redondeo, dado que el cast a int trunca.	
 	}
 	
 	// posiblemente innecesario
@@ -106,7 +161,15 @@ public class Agent : Entity {
 		_controller.move(target);	
 	}
 	
-	public void stoppedAction(){
+	public void stoppedAction() {		
+		if (life == 0)
+			Invoke("wakeUp", 20);
+		else		
+			actionFinished(ActionResult.success);
+	}
+	
+	private void wakeUp() {
+		life = (int)(lifeTotal * .2f);
 		actionFinished(ActionResult.success);
 	}
 	
@@ -118,9 +181,27 @@ public class Agent : Entity {
 		if(this.life - dif <= 0){
 			this.life = 0;	
 			//TODO: DIEEEEEEE
+			dropEverything();			
 		} else {
 			this.life = life - dif;	
 		}
+		
+		updateEnergyLevel();
+		
+	}
+	
+	private void updateEnergyLevel() {
+		//SimulationEngineComponentScript.ss.stdout.Send("energybar "+transform.Find("energybar").Find("energyLevel").ToString());		
+		Transform energyLevel = transform.Find("energybar").Find("energyLevel");
+		Vector3 origScale = energyLevel.localScale;
+		Vector3 origPos = energyLevel.localPosition;
+		energyLevel.localScale = new Vector3((float)life/lifeTotal, origScale.y, origScale.z);
+		energyLevel.localPosition = new Vector3(-((1f - energyLevel.localScale.x)/2f), origPos.y, origPos.z);
+		//SimulationEngineComponentScript.ss.stdout.Send("energyLevel: "+energyLevel.localScale.x);
+		//SimulationEngineComponentScript.ss.stdout.Send("energyPos: "+energyLevel.localPosition);		
+		//transform.Find("energyLevel").
+		
+		
 	}
 	
 	public void addLife(int dif) {
@@ -129,6 +210,7 @@ public class Agent : Entity {
 		} else {
 			this.life += dif;	
 		}
+		updateEnergyLevel();
 	}
 	
 	public bool pickupPreCon(EObject obj){
@@ -165,6 +247,47 @@ public class Agent : Entity {
 		obj.transform.position = newPosition;
 		obj.rigidbody.AddForce(new Vector3(20,20,20)); //TODO: cambiar esta fruta
 		Invoke("stoppedAction", actionDurations["drop"]);
+	}	
+	
+	public void dropEverything() {
+		foreach (EObject obj in new List<EObject>(backpack))
+			dropPosCon(obj);
+	}
+	
+	public bool attackPreCon(Agent target) {
+		if (target.Equals(this) || life <= 0 || target.life <= 0)
+			return false;
+		
+		Vector3 distance = this.transform.position - this.position;
+		return distance.magnitude < 11f;
+	}
+	
+	public void attackPosCon(Agent target) {				
+		int diceSides = 100; //TODO add as setting
+				
+		System.Random dice = new System.Random();		
+		int plusAg = dice.Next(diceSides);
+		int plusTargetAg = dice.Next(diceSides);		
+		int attackPowerAg = skill + plusAg;
+		int resistanceTargetAg = target.skill + plusTargetAg;
+		//SimulationEngineComponentScript.ss.stdout.Send("attack : power = "+attackPowerAg+" resist = "+resistanceTargetAg +". ");
+		if (attackPowerAg > resistanceTargetAg) {
+			int harm = attackPowerAg - resistanceTargetAg;
+			target.subLife(harm);
+			this.skill = this.skill + 1;
+			//SimulationEngineComponentScript.ss.stdout.Send("success. skill = "+ skill+". ");
+		}
+		
+		Transform bubblegun = transform.Find("bubbleGun");
+		bubblegun.LookAt(target.position);		
+		bubblegun.particleSystem.Play();
+	
+		Invoke("stoppedAction", actionDurations["attack"]);
+		//Invoke("attackStop", actionDurations["attack"]);
+	}
+	
+	private void attackStop() {
+		
 	}
 	
 	//DEPRECATED
@@ -184,15 +307,28 @@ public class Agent : Entity {
 	}
 	
 	public void perceive(Percept p){
-		
+				
+		//SimulationEngineComponentScript.ss.stdout.Send("  agent "+ perceptObjects<Agent>("agent").Count());
+		//SimulationEngineComponentScript.ss.stdout.Send("  gold "+ perceptObjects<Gold> ("gold").Cast<IPerceivableEntity>().ToList().Count());
+		//SimulationEngineComponentScript.ss.stdout.Send("  inn "+ perceptObjects<Inn> ("inn").Cast<IPerceivableEntity>().ToList().Count());
+		/*if (perceptObjects<Inn> ("inn").Cast<IPerceivableEntity>().ToList().ElementAt(0) == null)
+			SimulationEngineComponentScript.ss.stdout.Send("  inn is null");*/
 		p.addEntitiesRange(perceptObjects<Agent>("agent").Cast<IPerceivableEntity>().ToList());
 		p.addEntitiesRange(perceptObjects<Gold> ("gold") .Cast<IPerceivableEntity>().ToList());
+		p.addEntitiesRange(perceptObjects<Inn>  ("inn")  .Cast<IPerceivableEntity>().ToList());
 		p.addEntitiesRange(perceptNodes()				 .Cast<IPerceivableEntity>().ToList());
 	}
 	
 	public override string toProlog(){
 		string aux = base.toProlog();		
-		return aux + String.Format("[[life, {0}], [lifeTotal, {1}]])", this.life, this.lifeTotal);
+		List<string> auxList = new List<string>();
+		foreach(EObject eo in this.backpack) {
+			auxList.Add(eo.toProlog());			
+		}
+		aux = aux + String.Format("[[life, {0}], [lifeTotal, {1}], [skill, {2}], [lastAction, [{3}, {4}]], [has, {5}]])", 
+			this.life, this.lifeTotal, this.skill, this.agentState.lastAction.toProlog(), this.agentState.lastActionTime,
+			PrologList.AtomList<string>(auxList));		
+		return aux;
 	}
 	
 	public string selfProperties(bool inProlog = true){

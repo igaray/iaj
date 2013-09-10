@@ -173,6 +173,7 @@ public class Action {
     public string     objectID = "";
     public float      duration = 0f;
     public Position   position;
+	public String 	  prologString = "none"; 
 
     public Action() {
     }
@@ -197,6 +198,7 @@ public class Action {
                 this.agentID  = aid;
                 this.actionID = document.SelectSingleNode("/action/id").InnerText;
                 this.duration = ss.config.actionDurations[type_str];
+				this.prologString = type_str;
                 
                 if (type_str == "goodbye") {
                     this.type = ActionType.goodbye;
@@ -210,27 +212,36 @@ public class Action {
 					
 					//Acá no me anduvo Value, y si InnerText. No sé por qué
 					this.targetID = Convert.ToInt32(document.SelectSingleNode("/action/position").InnerText);
+					this.prologString += "("+targetID+")";
                 }
                 if (type_str == "attack") {
                     this.type     = ActionType.attack;
-                    this.targetID = Convert.ToInt32(document.SelectSingleNode("/action/agent/id").Value);
+					//SimulationEngineComponentScript.ss.stdout.Send("Name? " + document.SelectSingleNode("/action/agent/id").InnerText);
+                    this.objectID = document.SelectSingleNode("/action/agent/id").InnerText;
+					this.prologString += "("+objectID+")";
                 }
                 if (type_str == "pickup") {
                     this.type     = ActionType.pickup;
                     this.objectID = document.SelectSingleNode("/action/object/id").InnerText;
-					
+					this.prologString += "("+objectID+")";
                 }
                 if (type_str == "drop") {
                     this.type     = ActionType.drop;
                     this.objectID = document.SelectSingleNode("/action/object/id").InnerText;
+					this.prologString += "("+objectID+")";
                 }
             }
             catch (System.Xml.XmlException) {
                 // TODO somehow signal failure to agent
-                ss.stdout.Send(String.Format("AC {0}: Error: bad action xml.", agentID));
+                //ss.stdout.Send(String.Format("AC {0}: Error: bad action xml.", agentID));
             }
         }
     }
+	
+	public String toProlog() {
+		return prologString;
+	}
+	
 }
 
 //TODO: revisar si esto va
@@ -253,6 +264,7 @@ public class AgentState {
     public int                   agentID;
     public Position              position;
 	public Action                lastAction;
+	public int                	 lastActionTime;
     public ActionResult          lastActionResult;
 	public Agent				 agentController;
 		
@@ -267,7 +279,7 @@ public class AgentState {
         this.actions           = ss.readyActionQueue;
         this.results           = new MailBox<ActionResult>(false);
         this.percepts          = new MailBox<Percept>(false);
-        this.agentController   = Agent.Create(prefab, spawnSite, ss, "", name, 100);  
+        this.agentController   = Agent.Create(prefab, spawnSite, ss, "", name, 150);  
 		
 		this.agentController.setCallback(results.Send);
 		this.agentController.agentState = this;
@@ -311,9 +323,14 @@ public class SimulationEngine {
         // Tell all the threads to stop.
         connectionHandler.stop();
     }
+	
+	public void dynamicEnvUpdate() {
+		simulationState.gameTime++;	
+	}
 
     public void generatePercepts() {
-
+				
+		
         MailBox<PerceptRequest> requests = simulationState.perceptRequests;
 
         PerceptRequest request;
@@ -342,19 +359,21 @@ public class SimulationEngine {
             //     let the agent know that its action was executable
             // else
             //     let the agent know that its action was not executable
-            simulationState.stdout.Send(String.Format("AH: there are actions to process...\n"));
+            //simulationState.stdout.Send(String.Format("AH: there are actions to process...\n"));
             if (raq.NBRecv(out currentAction)) {
                 int agentID = currentAction.agentID;
                 try {
-					agents[agentID].lastAction = currentAction;
+					AgentState agentState = agents[agentID];
+					agentState.lastAction = currentAction;
+					agentState.lastActionTime = SimulationState.getInstance().getTime();
                     if (simulationState.executableAction(currentAction)) {
-                        simulationState.stdout.Send(String.Format("AH: the action is executable.\n"));
+                        //simulationState.stdout.Send(String.Format("AH: the action is executable.\n"));
                         //agents[agentID].results.Send(ActionResult.success);
                         agents[agentID].lastActionResult = ActionResult.success;
                         simulationState.applyActionEffects(currentAction);
                     }
                     else {
-                        simulationState.stdout.Send(String.Format("AH: the action is not executable.\n"));
+                        //simulationState.stdout.Send(String.Format("AH: the action is not executable.\n"));
                         agents[agentID].results.Send(ActionResult.failure);
                         agents[agentID].lastActionResult = ActionResult.failure;
                     }
@@ -414,4 +433,15 @@ public class SimulationEngine {
 			}
 		} 
     }
+	
+	public void instantiateDummyAgent(string name, GameObject prefab) {
+		int agentID = currentAgentID;		
+		Vector3 spawnPosition = GameObject.FindGameObjectsWithTag("Respawn")[currentRespawn].transform.position;
+        currentRespawn = (currentRespawn + 1) % GameObject.FindGameObjectsWithTag("Respawn").Length;
+		
+        AgentState state   = new AgentState(simulationState, name , agentID, spawnPosition, prefab);                            
+        simulationState.agentIDs.Add(name, agentID);
+        simulationState.agents.Add(agentID, state);                     
+        currentAgentID++;
+	}
 }

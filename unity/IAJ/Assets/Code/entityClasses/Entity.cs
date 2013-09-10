@@ -20,7 +20,7 @@ public abstract class Entity : MonoBehaviour, IPerceivableEntity {
 		_transform = this.transform;
 		_graph     = AstarPath.active.astarData.gridGraph;
 		//_name      = this.gameObject.name;
-		position   = this.transform.position;
+		position   = this.transform.position;		
 	}
 	
 	
@@ -50,4 +50,7 @@ public abstract class Entity : MonoBehaviour, IPerceivableEntity {
 			Vector3ToProlog(position));
 	}
 	
+	public string getPrologId() {
+		return "["+this._type+","+this._name+"]";
+	}
 }

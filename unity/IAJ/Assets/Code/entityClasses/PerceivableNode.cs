@@ -9,18 +9,24 @@ public class PerceivableNode : IPerceivableEntity
 {
 	public GridNode _node;
 	
+	public static Hashtable nodeToAdyacencyList = new Hashtable();
+	
 	public PerceivableNode (GridNode node)
 	{
-		this._node = node;
+		this._node = node;		
 	}
 	
 	public string toProlog(){
-		
-		List<int> neighbors = connections();
+					
+		List<string> neighbors = (List<string>)nodeToAdyacencyList[this._node];
+		if (neighbors == null) {
+			neighbors = weightedConnections();
+			nodeToAdyacencyList.Add(this._node, neighbors);
+		}						
 		return String.Format("node({0}, {1}, {2})", 
 			this._node.GetIndex(), 
 			Entity.Vector3ToProlog((Vector3)this._node.position),
-			PrologList.AtomList<int>(neighbors));
+			PrologList.AtomList<string>(neighbors));
 	}
 	
 	public List<int> connections(){
@@ -30,6 +36,15 @@ public class PerceivableNode : IPerceivableEntity
 			indexes.Add(node.GetNodeIndex());
 		}
 		return indexes;
+	}
+	
+	public List<string> weightedConnections(){
+		Node[] nodes = this._node.connections;			
+		List<string> result = new List<string>();
+		foreach (Node node in this){
+			result.Add("["+node.GetNodeIndex()+","+RigidBodyController.connectionCost((Vector3)this._node.position, (Vector3)node.position)+"]");
+		}
+		return result;
 	}
 	
 	public static List<int> connections(GridNode node){

@@ -46,7 +46,7 @@ authenticate(Name, Result) :-
 %--------------------------------------------------------------------%
 disconnect :-
     % Flush the percept message from the stream.
-    recv_percept(_), 
+    recv_percept(_),
 
     connection(Socket, InStream, OutStream),
 
@@ -57,7 +57,7 @@ disconnect :-
     retractall(connection(Socket, InStream, OutStream)),
     write('CONNECTION: Disconnected.\n'),
     !.
-disconnect :- 
+disconnect :-
     write('CONNECTION: Disconnect failure!\n'),
     fail.
 
@@ -89,13 +89,13 @@ send_action(Action, Result) :-
     action_id(ID),
     action_to_xml(Action, ID, XML),
 
-    % Write action to socket. 
+    % Write action to socket.
     connection(_, InStream, OutStream),
     write_term(OutStream, XML, []),
     nl(OutStream),
     flush_output(OutStream),
     % Receive action result.
-    read(InStream, Response),	
+    read(InStream, Response),
     action_result(Response, Result).
 
 action_result(unknown, unknown).
@@ -134,7 +134,7 @@ action_to_xml(_, _, _) :-
 %--------------------------------------------------------------------%
 run :-
     write('%--------------------------------------------------------------------%'), nl,
-    write('AGENT: receiving percept...'), nl, 
+    write('AGENT: receiving percept...'), nl,
     recv_percept(Percept),
     agent(Percept, Action),
     write('AGENT: sending action... '), write(Action), nl,
@@ -168,13 +168,13 @@ agent(Percept, Action) :-
 	retractall(lastAction(_)),
 	assert(lastAction(Action)),
 	writeln(Action).
-	
+
 %if the agent has an object in the backpack, he drops it
 plan(Percept, action(drop, [Name])):-
 	name(Self),
 	member(selfProperties(Self, _, _, _, [entity(Name, gold, _, _, _) | _], _), Percept),
 	!.
-	
+
 %% The agent is in the same node as the gold
 plan(Percept, action(pickup, [Name])):-
 	name(Self),
@@ -188,7 +188,7 @@ plan(Percept, action(move, [Node])):-
 	name(Self),
 	member(entity(Self, agent, ActualNode, _, _), Percept),
 	member(entity(_Name, gold, Node, _P, _Prop), Percept),
-	member(node(Node, _Pos, Connections), Percept), 
+	member(node(Node, _Pos, Connections), Percept),
 	member(ActualNode, Connections),
 	!.
 
@@ -197,10 +197,11 @@ plan(Percept, action(move, [Node])):-
 	name(Self),
 	member(entity(Self, agent, ActualNode, _, _), Percept),
 	findall(
-		node(Name, Pos, Connections), 
+		node(Name, Pos, Connections),
 		(
-			member(node(Name, Pos, Connections), Percept), 
+			member(node(Name, Pos, Connections), Percept),
 			member(ActualNode, Connections)
 		),
 		Nodes),
 	random_member(node(Node, _, _), Nodes).
+

@@ -8,10 +8,12 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Xml;
+using Pathfinding.Nodes;
+using Pathfinding;
 
 // Runs within Unity3D
 public class SimulationState : IEngine{
-
+			
     public  SimulationConfig             config;
     public  Dictionary<string, int>      agentIDs; // nombres -> ids
     public  Dictionary<int, AgentState>  agents;   // ids -> estado interno del agente
@@ -23,6 +25,8 @@ public class SimulationState : IEngine{
 	public  GameObject					 goldPrefab;
 	private float	   					 delta;
 	private Dictionary <string, Gold>	 coinsIn;
+	public  Dictionary <string, Inn>	 inns;
+	public  Dictionary <int, Inn>	 nodeToInn;
 	private Dictionary <string, float>   actionDurationsDic;
 	public  IDictionary<string, Gold>	 coins
 	{
@@ -62,22 +66,35 @@ public class SimulationState : IEngine{
 			return false;
 		}
 	}
+	
+	public int gameTime = 0;
+	private System.Timers.Timer timer;
+	
 		
     public SimulationState(string ConfigurationFilePath, GameObject gold = null) {
-        config               = new SimulationConfig("config.xml");
+        config               = new SimulationConfig("config.xml");		
 		agentIDs             = new Dictionary<string, int>       ();
-		agents               = new Dictionary<int,    AgentState>();
+		agents               = new Dictionary<int,    AgentState>();		
 
         //objects              = new Dictionary<int, ObjectState>();
 		coins				 = new Dictionary<string, Gold>      ();
+		inns				 = new Dictionary<string, Inn>      ();
+		nodeToInn		     = new Dictionary<int, Inn>();
         readyActionQueue     = new MailBox   <Action>            (true);
         perceptRequests      = new MailBox   <PerceptRequest>    (true);
 		instantiateRequests  = new MailBox   <InstantiateRequest>(true);
         stdout               = new MailBox   <string>            (true);
 		goldPrefab 			 = gold;
-		_delta               = 0.1f;
+		_delta               = 0.1f;		
     }
-
+	
+	/*
+	 * In the future SimulationState should implement the singleton pattern
+	 * */
+	public static SimulationState getInstance() {
+		return SimulationEngineComponentScript.ss;
+	}
+	
     public bool executableAction(Action action) {
         bool result = false;
 		Agent agent = agents[action.agentID].agentController;
@@ -94,10 +111,10 @@ public class SimulationState : IEngine{
                 result = agent.movePreConf(action.targetID);
                 break;
             }
-            case ActionType.attack: {
-                // TODO
-                // check if the target the agent wants to attack is in range
-                result = false;
+            case ActionType.attack: {                
+				//SimulationEngineComponentScript.ss.stdout.Send("objectID = "+action.objectID+" ");
+				//SimulationEngineComponentScript.ss.stdout.Send("targetAgent = "+agents[agentIDs[action.objectID]].agentController+" ");				
+                result = agent.attackPreCon(agents[agentIDs[action.objectID]].agentController);				
                 break;
             }
             case ActionType.pickup: {
@@ -116,6 +133,7 @@ public class SimulationState : IEngine{
 		Agent agent = agents[action.agentID].agentController;
         switch (action.type) {
             case ActionType.noop: {
+				agent.noopPosCon();
                 break;
             }
             case ActionType.move: {
@@ -123,8 +141,7 @@ public class SimulationState : IEngine{
                 break;
             }
             case ActionType.attack: {
-                // TODO
-                // decrement the target's health
+                agent.attackPosCon(agents[agentIDs[action.objectID]].agentController);
                 break;
             }
             case ActionType.pickup: {
@@ -140,10 +157,10 @@ public class SimulationState : IEngine{
             }
         }
         
-        stdout.Send(String.Format("Agent {0} performs action {1} of type {2}", 
-            action.agentID, 
-            action.actionID, 
-            action.type));
+        //stdout.Send(String.Format("Agent {0} performs action {1} of type {2}", 
+        //    action.agentID, 
+        //    action.actionID, 
+        //    action.type));
     }
 	
 	// this might not be necessary
@@ -168,4 +185,30 @@ public class SimulationState : IEngine{
 		gold._name  = name;
 		coins[name] = gold;
 	}
+	
+	public void addInn(Inn inn){
+		
+		string name = "inn" + inns.Count;
+		inn._name   = name;
+		inns[name]  = inn;
+		nodeToInn[(inn.getNode() as GridNode).GetIndex()] = inn;		
+	}
+	
+	public int getTime() {
+		return gameTime;
+	}
+	
+	/*
+	public static HashSet<Entity> has(Entity container) {
+		return hasDict[container];
+	}
+	
+	public static void addHas(Entity container, Entity contained) {				
+		has(container).Add(contained);
+	}
+	
+	public static void removeHas() {		
+		has(container).Remove(contained);			
+	}
+	*/
 }
