@@ -27,15 +27,17 @@ public class Inn : Building {
 	
 	
 	public void heal(Agent agent){
+		SimulationState.getInstance().stdout.Send(" a ");
 		updateForbidden(agent);
+		SimulationState.getInstance().stdout.Send(" b ");
 		if (isForbidden(agent))
 			return;		
-		
+		SimulationState.getInstance().stdout.Send(" c ");
 		if (agent.life < agent.lifeTotal)
 			agent.addLife(Mathf.CeilToInt(agent.lifeTotal * healCoefficient));
 			//ss.stdout.Send (Mathf.CeilToInt(agent.lifeTotal * healCoefficient));
 			//agent.addLife(Mathf.CeilToInt(1));
-		
+		SimulationState.getInstance().stdout.Send(" d ");
 		Debug.Log ("Estoy en la posada");
 		//ss.stdout.Send("Agente en la posada");
 	}

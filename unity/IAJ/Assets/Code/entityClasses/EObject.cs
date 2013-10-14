@@ -20,6 +20,10 @@ public abstract class EObject : Entity {
 		return p;
 	}
 	
+	public bool isAtGround() {
+		return gameObject.activeSelf;
+	}
+	
 	public override string toProlog(){
 		string aux = base.toProlog();		
 		return aux + string.Format("[[weight, {0}]", this.weigth);

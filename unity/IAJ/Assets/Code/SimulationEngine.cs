@@ -157,7 +157,7 @@ public class InstantiateRequest {
 }
 
 public enum ActionType {
-    unknown, goodbye, noop, move, attack, pickup, drop
+    unknown, goodbye, noop, move, attack, pickup, drop, cast_spell
 };
 
 public enum ActionResult {
@@ -168,12 +168,14 @@ public class Action {
     
     public ActionType type     = ActionType.noop;
     public string     actionID = "0"; // ID of the action, provided by agent.
-    public int        agentID  = 0;   // ID of the agent performing the action.
-    public int        targetID = 0;   // ID of an agent that is the recipient of the action.
+    public int        agentID  = 0;   // ID of the agent performing the action.    
+	public string 	  targetID = "";  // ID of an agent that is the recipient of the action.
+	public int        targetNodeID = 0; // ID of the target node of a move action.
     public string     objectID = "";
     public float      duration = 0f;
     public Position   position;
-	public String 	  prologString = "none"; 
+	public String 	  prologString = "none";
+	public String 	  description = "";
 
     public Action() {
     }
@@ -211,8 +213,8 @@ public class Action {
                     //this.position = new Position(document.SelectSingleNode("/action/position").Value);
 					
 					//Acá no me anduvo Value, y si InnerText. No sé por qué
-					this.targetID = Convert.ToInt32(document.SelectSingleNode("/action/position").InnerText);
-					this.prologString += "("+targetID+")";
+					this.targetNodeID = Convert.ToInt32(document.SelectSingleNode("/action/position").InnerText);
+					this.prologString += "("+targetNodeID+")";
                 }
                 if (type_str == "attack") {
                     this.type     = ActionType.attack;
@@ -229,6 +231,13 @@ public class Action {
                     this.type     = ActionType.drop;
                     this.objectID = document.SelectSingleNode("/action/object/id").InnerText;
 					this.prologString += "("+objectID+")";
+                }
+				if (type_str == "cast_spell") {
+                    this.type     = ActionType.cast_spell;
+					this.description  = document.SelectSingleNode("/action/spell").InnerText;
+					this.targetID = document.SelectSingleNode("/action/target/id").InnerText;
+                    this.objectID = document.SelectSingleNode("/action/potion/id").InnerText;
+					this.prologString += "("+description+"("+targetNodeID+","+objectID+"))";
                 }
             }
             catch (System.Xml.XmlException) {
@@ -444,4 +453,5 @@ public class SimulationEngine {
         simulationState.agents.Add(agentID, state);                     
         currentAgentID++;
 	}
+		
 }

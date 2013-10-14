@@ -1,51 +1,31 @@
 using UnityEngine;
 using System.Collections;
 
-public class Gold : EObject {
+public class Potion : EObject {
 	
 	public override void Start(){
 		base.Start();
-		this._type   = "gold";
+		this._type   = "potion";
 		this.weigth  = 2;
-		this._engine = (GameObject.FindGameObjectWithTag("GameController").GetComponent(typeof(IEngineComponent))
-			as IEngineComponent).engine;
+		this._engine = SimulationState.getInstance();
 		if (!createdByCode){
-			_engine.addGold(this);
+			_engine.addPotion(this);
 		}
-	}
+	}		
 	
-	public static Gold Create(	Object  prefab, 
-								Vector3 position, 
-								IEngine engine,
-								string  description, 
-								string  name, 
-								int 	weigth) {
+	public static Potion Create(Vector3 position) {
 		
+		Object  prefab = SimulationState.getInstance().potionPrefab;			
 		GameObject gameObj = Instantiate(prefab, position, Quaternion.identity) as GameObject;
-		Gold       gold    = gameObj.GetComponent<Gold>();
-		
-		gold.weigth        = weigth;
-		gold._description  = description;
-		gold._name         = name;
-		gold.createdByCode = true;
-		gold._engine	   = engine;
-		
-		return gold;
+		Potion       potion    = gameObj.GetComponent<Potion>();
+		potion.createdByCode = true;
+		potion._type 		   = "potion";
+		potion._engine	   = SimulationState.getInstance();		
+		potion._engine.addPotion(potion);
+		return potion;
 	}
 	
-	public static Gold Create(Vector3 position) {
-		
-		Object  prefab = SimulationState.getInstance().goldPrefab;			
-		GameObject gameObj = Instantiate(prefab, position, Quaternion.identity) as GameObject;
-		Gold       gold    = gameObj.GetComponent<Gold>();
-		gold.createdByCode = true;
-		gold._type 		   = "gold";
-		gold._engine	   = SimulationState.getInstance();		
-		gold._engine.addGold(gold);
-		return gold;
-	}
-	
-	public override string toProlog(){
+	public override string toProlog(){		
 		string aux = base.toProlog();
 		return aux + "])";
 	}

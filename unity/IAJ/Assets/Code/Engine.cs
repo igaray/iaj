@@ -9,7 +9,7 @@ public class Engine : MonoBehaviour, IEngine, IEngineComponent {
 	public  GameObject  			   agent, gold;
 	public  Inn				           inn;
 	private float	   				   delta;
-	private Dictionary <string, Gold>  coinsIn;
+	private Dictionary <string, EObject>  objectsIn;
 	private Dictionary <string, float> durations;
 	public  IEngine					   engine
 	{
@@ -19,15 +19,15 @@ public class Engine : MonoBehaviour, IEngine, IEngineComponent {
 		}
 	}
 	
-	public  IDictionary<string, Gold> coins
+	public  IDictionary<string, EObject> objects
 	{
 		get
 		{
-			return coinsIn;
+			return objectsIn;
 		}
 		set
 		{
-			coinsIn = value as Dictionary <String, Gold>;
+			objectsIn = value as Dictionary <String, EObject>;
 		}
 	}
 	
@@ -65,7 +65,7 @@ public class Engine : MonoBehaviour, IEngine, IEngineComponent {
 		
 		_delta = 0.1f;
 		
-		coins = new Dictionary <String, Gold>();
+		objects = new Dictionary <String, EObject>();
 		
 		durations = new Dictionary<string, float>();
 		durations["pickup"] = 0.5f;
@@ -94,11 +94,16 @@ public class Engine : MonoBehaviour, IEngine, IEngineComponent {
 	}
 	
 	// implementación potencialmente bugosa
-	public void addGold(Gold gold){
-		
-		string name = "gold" + coins.Count;
+	public void addGold(Gold gold){	
+		string name = "gold" + objects.Count;
 		gold._name  = name;
-		coins[name] = gold;
+		objects[name] = gold;
+	}
+	
+	public void addPotion(Potion potion){		
+		string name = "p" + objects.Count;
+		potion._name  = name;
+		objects[name] = potion;
 	}
 	
 //	void Update () {

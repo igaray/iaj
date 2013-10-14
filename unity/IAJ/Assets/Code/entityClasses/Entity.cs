@@ -42,7 +42,7 @@ public abstract class Entity : MonoBehaviour, IPerceivableEntity {
 	
 	// cada clase que implemente esta clase tiene que sobreescribir este método
 	public virtual string toProlog ()
-	{
+	{	
 		return String.Format("entity({0}, {1}, {2}, {3}, ", 
 			this._name, 
 			this._type,
@@ -52,5 +52,10 @@ public abstract class Entity : MonoBehaviour, IPerceivableEntity {
 	
 	public string getPrologId() {
 		return "["+this._type+","+this._name+"]";
+	}
+	
+	public void setPosition(Vector3 position) {
+		this.transform.position = position;
+		this.position = position;
 	}
 }

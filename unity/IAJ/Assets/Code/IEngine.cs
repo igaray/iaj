@@ -13,7 +13,7 @@ public interface IEngine{
 	}
 	
 	// monedas en el mundo
-	IDictionary<string, Gold> coins
+	IDictionary<string, EObject> objects
 	{
 		get;
 		set;
@@ -31,6 +31,7 @@ public interface IEngine{
 	}
 	
 	void addGold(Gold gold);
+	void addPotion(Potion potion);
 }
 
 // Esto sirve para mantener el puntero al IEngine en el objeto de Unity (el Component). 

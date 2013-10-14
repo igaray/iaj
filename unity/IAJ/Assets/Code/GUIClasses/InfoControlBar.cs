@@ -27,8 +27,7 @@ public class InfoControlBar : MonoBehaviour
 		    GUILayout.Box(agent._name);			
 			GUILayout.Label("skill: "+agent.skill);
 			GUILayout.BeginHorizontal();
-			 GUILayout.Label("backpack:");		
-		GUILayout.Label(goldIcon);
+			 GUILayout.Label("backpack:");				
 			 foreach (EObject obj in agent.backpack) {
 		 		GUILayout.Label(goldIcon);
 			 }

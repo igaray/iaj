@@ -142,7 +142,7 @@ public class Agent : Entity {
 	}
 	
 	public void noopPosCon() {
-		Invoke("stoppedAction", actionDurations["noop"]);
+		//Invoke("stoppedAction", actionDurations["noop"]);
 	}
 	
 	public bool movePreConf(int node){
@@ -161,10 +161,16 @@ public class Agent : Entity {
 		_controller.move(target);	
 	}
 	
+	public void stopActionAfter(float time) {
+		Invoke("stoppedAction", time);
+	}
+	
 	public void stoppedAction() {		
-		if (life == 0)
+		if (life == 0) {
+			//TODO: DIEEEEEEE
+			dropEverything();			
 			Invoke("wakeUp", 20);
-		else		
+		} else		
 			actionFinished(ActionResult.success);
 	}
 	
@@ -178,16 +184,12 @@ public class Agent : Entity {
 	}
 	
 	public void subLife(int dif) {
-		if(this.life - dif <= 0){
-			this.life = 0;	
-			//TODO: DIEEEEEEE
-			dropEverything();			
-		} else {
+		if(this.life - dif <= 0)
+			this.life = 0;				
+		else
 			this.life = life - dif;	
-		}
-		
-		updateEnergyLevel();
-		
+				
+		updateEnergyLevel();		
 	}
 	
 	private void updateEnergyLevel() {
@@ -213,14 +215,14 @@ public class Agent : Entity {
 		updateEnergyLevel();
 	}
 	
-	public bool pickupPreCon(EObject obj){
-		return isReachableObject(obj);     //TODO: revisar si isReachableObject es necesario
+	public bool pickupPreCon(EObject obj){				
+		return obj.isAtGround() && isReachableObject(obj);     //TODO: revisar si isReachableObject es necesario
 	}
 	
 	public void pickupPosCon(EObject obj){
 		obj.gameObject.SetActive(false);
 		this.backpack.Add(obj);
-		Invoke("stoppedAction", actionDurations["pickup"]);
+		//Invoke("stoppedAction", actionDurations["pickup"]);
 	}
 	
 	//DEPRECATED
@@ -244,9 +246,9 @@ public class Agent : Entity {
 		this.backpack.Remove(obj);
 		obj.gameObject.SetActive(true);
 		newPosition.y += 2.5f;
-		obj.transform.position = newPosition;
+		obj.setPosition(newPosition);
 		obj.rigidbody.AddForce(new Vector3(20,20,20)); //TODO: cambiar esta fruta
-		Invoke("stoppedAction", actionDurations["drop"]);
+		//Invoke("stoppedAction", actionDurations["drop"]);
 	}	
 	
 	public void dropEverything() {
@@ -282,12 +284,23 @@ public class Agent : Entity {
 		bubblegun.LookAt(target.position);		
 		bubblegun.particleSystem.Play();
 	
-		Invoke("stoppedAction", actionDurations["attack"]);
+		//Invoke("stoppedAction", actionDurations["attack"]);
 		//Invoke("attackStop", actionDurations["attack"]);
 	}
 	
 	private void attackStop() {
 		
+	}
+	
+	public bool castSpellOpenPreCon(Grave grave, EObject potion){
+		return grave != null && !grave.isOpen()
+			&& potion != null && backpack.Contains(potion);
+	}
+	
+	public void castSpellOpenPosCon(Grave grave, EObject potion){
+		grave.setOpen(true);		
+		backpack.Remove(potion);
+		//Invoke("stoppedAction", actionDurations["cast_spell"]);
 	}
 	
 	//DEPRECATED
@@ -306,16 +319,12 @@ public class Agent : Entity {
 		}
 	}
 	
-	public void perceive(Percept p){
-				
-		//SimulationEngineComponentScript.ss.stdout.Send("  agent "+ perceptObjects<Agent>("agent").Count());
-		//SimulationEngineComponentScript.ss.stdout.Send("  gold "+ perceptObjects<Gold> ("gold").Cast<IPerceivableEntity>().ToList().Count());
-		//SimulationEngineComponentScript.ss.stdout.Send("  inn "+ perceptObjects<Inn> ("inn").Cast<IPerceivableEntity>().ToList().Count());
-		/*if (perceptObjects<Inn> ("inn").Cast<IPerceivableEntity>().ToList().ElementAt(0) == null)
-			SimulationEngineComponentScript.ss.stdout.Send("  inn is null");*/
+	public void perceive(Percept p){						
 		p.addEntitiesRange(perceptObjects<Agent>("agent").Cast<IPerceivableEntity>().ToList());
 		p.addEntitiesRange(perceptObjects<Gold> ("gold") .Cast<IPerceivableEntity>().ToList());
 		p.addEntitiesRange(perceptObjects<Inn>  ("inn")  .Cast<IPerceivableEntity>().ToList());
+		p.addEntitiesRange(perceptObjects<Grave>  ("grave")  .Cast<IPerceivableEntity>().ToList());
+		p.addEntitiesRange(perceptObjects<Potion>  ("potion")  .Cast<IPerceivableEntity>().ToList());
 		p.addEntitiesRange(perceptNodes()				 .Cast<IPerceivableEntity>().ToList());
 	}
 	
@@ -406,10 +415,9 @@ public class Agent : Entity {
 				node.position).worldMagnitude < _depthOfSight * _nodeSize;
 	}
 
-	private bool isReachableObject(EObject obj){
-		
+	private bool isReachableObject(EObject obj){		
 		return (obj.transform.position - transform.position).magnitude < _depthOfSight * _nodeSize;
-	}
+	}		
 }
 
 //Breadth first nodes

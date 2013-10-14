@@ -23,22 +23,24 @@ public class SimulationState : IEngine{
 	public  MailBox<InstantiateRequest>  instantiateRequests;
 	public  MailBox<string>              stdout;
 	public  GameObject					 goldPrefab;
+	public 	GameObject					 potionPrefab;
 	private float	   					 delta;
-	private Dictionary <string, Gold>	 coinsIn;
+	private Dictionary <string, EObject>	 objectsIn;
 	public  Dictionary <string, Inn>	 inns;
+	public  Dictionary <string, Grave>	 graves;
 	public  Dictionary <int, Inn>	 nodeToInn;
 	private Dictionary <string, float>   actionDurationsDic;
-	public  IDictionary<string, Gold>	 coins
+	public  IDictionary<string, EObject>	 objects
 	{
 		get
 		{
-			return coinsIn;
+			return objectsIn;
 		}
 		set
 		{
-			coinsIn = value as Dictionary <string, Gold>;
+			objectsIn = value as Dictionary <string, EObject>;
 		}
-	}
+	}	
 	
 	public float _delta
 	{
@@ -71,20 +73,22 @@ public class SimulationState : IEngine{
 	private System.Timers.Timer timer;
 	
 		
-    public SimulationState(string ConfigurationFilePath, GameObject gold = null) {
+    public SimulationState(string ConfigurationFilePath, GameObject gold = null, GameObject potion = null) {
         config               = new SimulationConfig("config.xml");		
 		agentIDs             = new Dictionary<string, int>       ();
 		agents               = new Dictionary<int,    AgentState>();		
 
         //objects              = new Dictionary<int, ObjectState>();
-		coins				 = new Dictionary<string, Gold>      ();
+		objects				 = new Dictionary<string, EObject>      ();
 		inns				 = new Dictionary<string, Inn>      ();
+		graves				 = new Dictionary<string, Grave>      ();
 		nodeToInn		     = new Dictionary<int, Inn>();
         readyActionQueue     = new MailBox   <Action>            (true);
         perceptRequests      = new MailBox   <PerceptRequest>    (true);
 		instantiateRequests  = new MailBox   <InstantiateRequest>(true);
         stdout               = new MailBox   <string>            (true);
 		goldPrefab 			 = gold;
+		potionPrefab		 = potion;
 		_delta               = 0.1f;		
     }
 	
@@ -98,6 +102,7 @@ public class SimulationState : IEngine{
     public bool executableAction(Action action) {
         bool result = false;
 		Agent agent = agents[action.agentID].agentController;
+		try {
         switch (action.type) {
             //case ActionType.: {
             //    result = ;
@@ -108,7 +113,7 @@ public class SimulationState : IEngine{
                 break;
             }
             case ActionType.move: {
-                result = agent.movePreConf(action.targetID);
+                result = agent.movePreConf(action.targetNodeID);
                 break;
             }
             case ActionType.attack: {                
@@ -118,14 +123,26 @@ public class SimulationState : IEngine{
                 break;
             }
             case ActionType.pickup: {
-                result = agent.pickupPreCon(coins[action.objectID]);
+                result = agent.pickupPreCon(objects[action.objectID]);
                 break;
             }
             case ActionType.drop: {
-                result = agent.dropPreCon(coins[action.objectID]);;
+                result = agent.dropPreCon(objects[action.objectID]);;
                 break;
             }
-        }
+			case ActionType.cast_spell: {				
+				if (action.description.Equals("open")) {					
+					SimulationState.getInstance().stdout.Send(agent.ToString());
+					SimulationState.getInstance().stdout.Send(action.objectID);				
+					result = agent.castSpellOpenPreCon(graves[action.targetID], objects[action.objectID]);								
+				}
+				break;
+				}
+			}
+		} catch (System.Collections.Generic.KeyNotFoundException e) {
+             SimulationState.getInstance().stdout.Send(String.Format("Key not found in SimulationState.executableAction. Precondition of action {0} Failed: {1} ", action.type.ToString(), e.ToString()));
+			 Debug.LogError(e.ToString());
+        }        
         return result;
     }
 
@@ -137,7 +154,7 @@ public class SimulationState : IEngine{
                 break;
             }
             case ActionType.move: {
-                agent.movePosCond(action.targetID);
+                agent.movePosCond(action.targetNodeID);
                 break;
             }
             case ActionType.attack: {
@@ -145,53 +162,65 @@ public class SimulationState : IEngine{
                 break;
             }
             case ActionType.pickup: {
-				agent.pickupPosCon(coins[action.objectID]);
+				agent.pickupPosCon(objects[action.objectID]);
                 break;
             }
             case ActionType.drop: {
                 // TODO
                 // remove the object from the agent's inventory
                 // update the object's position
-				agent.dropPosCon(coins[action.objectID]);
+				agent.dropPosCon(objects[action.objectID]);
                 break;
             }
-        }
-        
-        //stdout.Send(String.Format("Agent {0} performs action {1} of type {2}", 
-        //    action.agentID, 
-        //    action.actionID, 
-        //    action.type));
-    }
+			case ActionType.cast_spell: {
+				if (action.description.Equals("open"))
+					agent.castSpellOpenPosCon(graves[action.targetID], objects[action.objectID]);
+				break;
+			}
+        }        		
+		if (!action.type.Equals(ActionType.move))
+			agent.stopActionAfter(agent.actionDurations[action.type.ToString()]);								        
+    }		
 	
 	// this might not be necessary
 	public void initializeCoins(){
 		
-		coins["gold1"]  = Gold.Create (goldPrefab,  new Vector3(6,  0, 15), this, "", "gold1",  2);
-		coins["gold2"]  = Gold.Create (goldPrefab,  new Vector3(22, 0, 4 ), this, "", "gold2",  2);
-		coins["gold3"]  = Gold.Create (goldPrefab,  new Vector3(27, 0, 15), this, "", "gold3",  2);
-		coins["gold4"]  = Gold.Create (goldPrefab,  new Vector3(2,  0, 4 ), this, "", "gold4",  2);
-		coins["gold5"]  = Gold.Create (goldPrefab,  new Vector3(5,  0, 22), this, "", "gold5",  2);
-		coins["gold6"]  = Gold.Create (goldPrefab,  new Vector3(26, 0, 10), this, "", "gold6",  2);
-		coins["gold7"]  = Gold.Create (goldPrefab,  new Vector3(12, 0, 18), this, "", "gold7",  2);
-		coins["gold8"]  = Gold.Create (goldPrefab,  new Vector3(12, 0, 18), this, "", "gold8",  2);
-		coins["gold9"]  = Gold.Create (goldPrefab,  new Vector3(26, 0, 6 ), this, "", "gold9",  2);
-		coins["gold10"] = Gold.Create (goldPrefab,  new Vector3(11, 0, 4 ), this, "", "gold10", 2);
+		objects["gold1"]  = Gold.Create (goldPrefab,  new Vector3(6,  0, 15), this, "", "gold1",  2);
+		objects["gold2"]  = Gold.Create (goldPrefab,  new Vector3(22, 0, 4 ), this, "", "gold2",  2);
+		objects["gold3"]  = Gold.Create (goldPrefab,  new Vector3(27, 0, 15), this, "", "gold3",  2);
+		objects["gold4"]  = Gold.Create (goldPrefab,  new Vector3(2,  0, 4 ), this, "", "gold4",  2);
+		objects["gold5"]  = Gold.Create (goldPrefab,  new Vector3(5,  0, 22), this, "", "gold5",  2);
+		objects["gold6"]  = Gold.Create (goldPrefab,  new Vector3(26, 0, 10), this, "", "gold6",  2);
+		objects["gold7"]  = Gold.Create (goldPrefab,  new Vector3(12, 0, 18), this, "", "gold7",  2);
+		objects["gold8"]  = Gold.Create (goldPrefab,  new Vector3(12, 0, 18), this, "", "gold8",  2);
+		objects["gold9"]  = Gold.Create (goldPrefab,  new Vector3(26, 0, 6 ), this, "", "gold9",  2);
+		objects["gold10"] = Gold.Create (goldPrefab,  new Vector3(11, 0, 4 ), this, "", "gold10", 2);
 		
 	}
 	
-	public void addGold(Gold gold){
-		
-		string name = "gold" + coins.Count;
+	public void addGold(Gold gold){		
+		string name = "gold" + objects.Count;
 		gold._name  = name;
-		coins[name] = gold;
+		objects[name] = gold;
 	}
 	
-	public void addInn(Inn inn){
-		
-		string name = "inn" + inns.Count;
-		inn._name   = name;
-		inns[name]  = inn;
+	public void addPotion(Potion potion){		
+		string name = "p" + objects.Count;
+		potion._name  = name;
+		objects[name] = potion;
+	}
+	
+	public void addInn(Inn inn){				
+		inn._name   = "inn" + inns.Count;
+		inns[inn._name]  = inn;
 		nodeToInn[(inn.getNode() as GridNode).GetIndex()] = inn;		
+	}
+	
+	public void addGrave(Grave grave){				
+		SimulationState.getInstance().stdout.Send("entro addGrave");
+		grave._name   = "grave" + graves.Count;
+		SimulationState.getInstance().stdout.Send("name: "+grave._name);
+		graves[grave._name]  = grave;		
 	}
 	
 	public int getTime() {

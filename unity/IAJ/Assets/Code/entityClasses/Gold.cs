@@ -7,8 +7,7 @@ public class Gold : EObject {
 		base.Start();
 		this._type   = "gold";
 		this.weigth  = 2;
-		this._engine = (GameObject.FindGameObjectWithTag("GameController").GetComponent(typeof(IEngineComponent))
-			as IEngineComponent).engine;
+		this._engine = SimulationState.getInstance();
 		if (!createdByCode){
 			_engine.addGold(this);
 		}
@@ -30,6 +29,18 @@ public class Gold : EObject {
 		gold.createdByCode = true;
 		gold._engine	   = engine;
 		
+		return gold;
+	}
+	
+	public static Gold Create(Vector3 position) {
+		
+		Object  prefab = SimulationState.getInstance().goldPrefab;			
+		GameObject gameObj = Instantiate(prefab, position, Quaternion.identity) as GameObject;
+		Gold       gold    = gameObj.GetComponent<Gold>();
+		gold.createdByCode = true;
+		gold._type 		   = "gold";
+		gold._engine	   = SimulationState.getInstance();		
+		gold._engine.addGold(gold);
 		return gold;
 	}
 	

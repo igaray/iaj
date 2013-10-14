@@ -20,7 +20,7 @@ public class SimulationEngineComponentScript : MonoBehaviour, IEngineComponent{
     public  GUISkin          mySkin;
     public  Vector2          scrollPosition;
     public  string           outputText = "";
-	public  GameObject		 agentPrefab, goldPrefab;
+	public  GameObject		 agentPrefab, goldPrefab, potionPrefab;
 	public  IEngine		  	 engine
 	{
 		get
@@ -31,11 +31,14 @@ public class SimulationEngineComponentScript : MonoBehaviour, IEngineComponent{
 
     
     // Use this for initialization
-    void Awake () {
-        ss = new SimulationState("C:\\config.xml", goldPrefab);
+    void Awake () {		
+        ss = new SimulationState("C:\\config.xml", goldPrefab, potionPrefab);
+		SimulationState.getInstance().stdout.Send("entro Awake Sim Engine");
         se = new SimulationEngine(ss);
-
-        InvokeRepeating( "DoWork", 0, 0.1f );
+		
+		//ss.initialize();
+		
+        InvokeRepeating( "DoWork", 0, 0.1f );			
 		
 		//se.instantiateDummyAgent("dummy1", agentPrefab);
 		//se.instantiateDummyAgent("dummy2", agentPrefab);

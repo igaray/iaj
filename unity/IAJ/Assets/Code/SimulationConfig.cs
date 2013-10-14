@@ -37,6 +37,7 @@ public class SimulationConfig {
             actionDurations["pickup"]     = 1f;
             actionDurations["drop"]       = 1f;
             actionDurations["attack"]     = 1f;
+            actionDurations["cast_spell"] = 1f;			
         }
     }
 }

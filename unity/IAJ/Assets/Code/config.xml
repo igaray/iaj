@@ -31,5 +31,9 @@
                 <effect type="inc" param="def" value="1" />
             </effects>
         </action>
+		<action 
+            name="cast_spell" 
+            duration="1">            
+        </action>
     </actions>
 </config>
