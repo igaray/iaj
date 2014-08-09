@@ -11,6 +11,7 @@ public class Engine : MonoBehaviour, IEngine, IEngineComponent {
 	private float	   				   delta;
 	private Dictionary <string, EObject>  objectsIn;
 	private Dictionary <string, float> durations;
+	public static Dictionary <string, int> actionCost;
 	public  IEngine					   engine
 	{
 		get

@@ -131,14 +131,7 @@ public class Agent : Entity {
 		if (SimulationState.getInstance().nodeToInn.ContainsKey(currentNode)) {
 			Inn inn = SimulationState.getInstance().nodeToInn[currentNode];
 			inn.heal(this);
-		}
-		/*foreach(Inn inn in ss.inns.Values){					
-			if(inn.isInside(transform.position)){							
-				inn.heal(this);			
-				break;
-			}			
-		}*/
-				
+		}					
 	}
 	
 	public void noopPosCon() {
@@ -148,7 +141,6 @@ public class Agent : Entity {
 	public bool movePreConf(int node){
 		Node actualNode = AstarPath.active.GetNearest(transform.position).node as GridNode;		
 		return PerceivableNode.connections(actualNode as GridNode).Contains(node);
-//		return true;
 	}
 	
 	public void movePosCond(int node){
@@ -166,19 +158,28 @@ public class Agent : Entity {
 	}
 	
 	public void stoppedAction() {		
-		if (life == 0) {
+		if (!isConscious()) {
 			//TODO: DIEEEEEEE
 			dropEverything();			
 			Invoke("wakeUp", 20);
 		} else		
 			actionFinished(ActionResult.success);
 	}
-	
+
 	private void wakeUp() {
 		life = (int)(lifeTotal * .2f);
 		actionFinished(ActionResult.success);
 	}
-	
+
+	public Boolean isConscious() {
+		return life > 0;
+	}
+
+	public void setUnconscious() {
+		life = 0;
+		dropEverything();
+	}
+
 	public void actionFailed(){
 		actionFinished(ActionResult.failure);
 	}
@@ -222,7 +223,6 @@ public class Agent : Entity {
 	public void pickupPosCon(EObject obj){
 		obj.gameObject.SetActive(false);
 		this.backpack.Add(obj);
-		//Invoke("stoppedAction", actionDurations["pickup"]);
 	}
 	
 	//DEPRECATED
@@ -248,7 +248,6 @@ public class Agent : Entity {
 		newPosition.y += 2.5f;
 		obj.setPosition(newPosition);
 		obj.rigidbody.AddForce(new Vector3(20,20,20)); //TODO: cambiar esta fruta
-		//Invoke("stoppedAction", actionDurations["drop"]);
 	}	
 	
 	public void dropEverything() {
@@ -279,13 +278,9 @@ public class Agent : Entity {
 			this.skill = this.skill + 1;
 			//SimulationEngineComponentScript.ss.stdout.Send("success. skill = "+ skill+". ");
 		}
-		
 		Transform bubblegun = transform.Find("bubbleGun");
 		bubblegun.LookAt(target.position);		
-		bubblegun.particleSystem.Play();
-	
-		//Invoke("stoppedAction", actionDurations["attack"]);
-		//Invoke("attackStop", actionDurations["attack"]);
+		bubblegun.particleSystem.Play();	
 	}
 	
 	private void attackStop() {
@@ -300,9 +295,21 @@ public class Agent : Entity {
 	public void castSpellOpenPosCon(Grave grave, EObject potion){
 		grave.setOpen(true);		
 		backpack.Remove(potion);
-		//Invoke("stoppedAction", actionDurations["cast_spell"]);
+	}
+
+	public bool castSpellSleepPreCon(Agent target, EObject potion){
+		SimulationState.getInstance().stdout.Send(target._name);
+		SimulationState.getInstance().stdout.Send(potion.ToString());
+		Vector3 distance = this.transform.position - this.position;
+		return target != null && target.isConscious()
+			&& potion != null && backpack.Contains(potion) && distance.magnitude < 11f;
 	}
 	
+	public void castSpellSleepPosCon(Agent target, EObject potion){
+		target.setUnconscious();		
+		backpack.Remove(potion);
+	}
+
 	//DEPRECATED
 	public void drop(EObject obj) {
 		
@@ -312,7 +319,8 @@ public class Agent : Entity {
 			obj.gameObject.SetActive(true);
 			newPosition.y += 2.5f;
 			obj.transform.position = newPosition;
-			obj.rigidbody.AddForce(new Vector3(20,20,20)); //TODO: cambiar esta fruta
+			if (!obj._type.Equals("potion"))
+				obj.rigidbody.AddForce(new Vector3(20,20,20)); //TODO: cambiar esta fruta
 		}
 		else{
 			//TODO: excepcion? devolver falso? guardarlo en algun lado?
@@ -370,7 +378,7 @@ public class Agent : Entity {
 									 // acá restrinjo el tipo pasado por parámetro
 		{
 		Collider[] colliders = 
-			Physics.OverlapSphere(this.transform.position, _depthOfSight,
+			Physics.OverlapSphere(this.transform.position, _depthOfSight * _nodeSize,
 				1 << LayerMask.NameToLayer(layer)); // usa mascaras, con el << agregas con BITWISE-OR
 		List<ObjectType> aux = new List<ObjectType>();
 		

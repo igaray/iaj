@@ -74,7 +74,7 @@ public class SimulationState : IEngine{
 	
 		
     public SimulationState(string ConfigurationFilePath, GameObject gold = null, GameObject potion = null) {
-        config               = new SimulationConfig("config.xml");		
+		config               = new SimulationConfig();		
 		agentIDs             = new Dictionary<string, int>       ();
 		agents               = new Dictionary<int,    AgentState>();		
 
@@ -135,7 +135,8 @@ public class SimulationState : IEngine{
 					SimulationState.getInstance().stdout.Send(agent.ToString());
 					SimulationState.getInstance().stdout.Send(action.objectID);				
 					result = agent.castSpellOpenPreCon(graves[action.targetID], objects[action.objectID]);								
-				}
+				} else if (action.description.Equals("sleep"))
+					result = agent.castSpellSleepPreCon(agents[agentIDs[action.targetID]].agentController, objects[action.objectID]);													
 				break;
 				}
 			}
@@ -175,11 +176,18 @@ public class SimulationState : IEngine{
 			case ActionType.cast_spell: {
 				if (action.description.Equals("open"))
 					agent.castSpellOpenPosCon(graves[action.targetID], objects[action.objectID]);
+				if (action.description.Equals("sleep"))
+					agent.castSpellSleepPosCon(agents[agentIDs[action.targetID]].agentController, objects[action.objectID]);
 				break;
 			}
         }        		
 		if (!action.type.Equals(ActionType.move))
 			agent.stopActionAfter(agent.actionDurations[action.type.ToString()]);								        
+		Dictionary<SimulationConfig.AgAttributes, float> actionEffects = SimulationConfig.actionEffectsOnAttributes[action.type];
+		foreach (SimulationConfig.AgAttributes attr in actionEffects.Keys) {
+			if (attr.Equals(SimulationConfig.AgAttributes.HP))
+				agent.addLife((int)actionEffects[attr]);
+		}
     }		
 	
 	// this might not be necessary

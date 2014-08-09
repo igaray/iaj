@@ -288,7 +288,7 @@ public class AgentState {
         this.actions           = ss.readyActionQueue;
         this.results           = new MailBox<ActionResult>(false);
         this.percepts          = new MailBox<Percept>(false);
-        this.agentController   = Agent.Create(prefab, spawnSite, ss, "", name, 150);  
+        this.agentController   = Agent.Create(prefab, spawnSite, ss, "", name, 450);  
 		
 		this.agentController.setCallback(results.Send);
 		this.agentController.agentState = this;
