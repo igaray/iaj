@@ -1,0 +1,42 @@
+<config>
+    <simulation_duration>10</simulation_duration> <!-- seconds -->
+    <size>
+        <rows>10</rows> <!-- integer -->
+        <cols>10</cols> <!-- integer -->
+    </size>
+    <vision_length>2</vision_length>  <!-- integer -->
+    <unconscious_time>1</unconscious_time>  <!-- seconds -->
+    <actions>
+        <action 
+            name="noop" 
+            duration="1">  <!-- name: string, duration: seconds -->
+        </action>
+        <action 
+            name="move" 
+            duration="1">
+        </action>
+        <action 
+            name="pickup" 
+            duration="1">
+        </action>
+        <action 
+            name="drop" 
+            duration="1">
+        </action>
+        <action 
+            name="attack" 
+            duration="1">
+            <effects>
+                <effect attr="hp" value="-1" />                
+            </effects>
+        </action>
+		<action 
+            name="cast_spell" 
+            duration="1">
+            <effects>
+                <effect attr="hp" value="-1" />
+                <effect attr="xp" value="10" />
+            </effects>
+        </action>
+    </actions>
+</config>

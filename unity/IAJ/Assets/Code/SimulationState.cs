@@ -187,6 +187,8 @@ public class SimulationState : IEngine{
 		foreach (SimulationConfig.AgAttributes attr in actionEffects.Keys) {
 			if (attr.Equals(SimulationConfig.AgAttributes.HP))
 				agent.addLife((int)actionEffects[attr]);
+			else if (attr.Equals(SimulationConfig.AgAttributes.XP))
+				agent.addSkill((int)actionEffects[attr]);
 		}
     }		
 	

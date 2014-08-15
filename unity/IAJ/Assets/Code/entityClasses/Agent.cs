@@ -215,6 +215,10 @@ public class Agent : Entity {
 		}
 		updateEnergyLevel();
 	}
+
+	public void addSkill(int diff) {
+		skill += diff;
+	}
 	
 	public bool pickupPreCon(EObject obj){				
 		return obj.isAtGround() && isReachableObject(obj);     //TODO: revisar si isReachableObject es necesario
@@ -295,6 +299,7 @@ public class Agent : Entity {
 	public void castSpellOpenPosCon(Grave grave, EObject potion){
 		grave.setOpen(true);		
 		backpack.Remove(potion);
+		castSpellEffect();
 	}
 
 	public bool castSpellSleepPreCon(Agent target, EObject potion){
@@ -308,6 +313,24 @@ public class Agent : Entity {
 	public void castSpellSleepPosCon(Agent target, EObject potion){
 		target.setUnconscious();		
 		backpack.Remove(potion);
+		castSpellEffect();
+		target.spelledEffect();
+	}
+
+	public void castSpellEffect() {
+		transform.light.enabled = true;
+		transform.light.color = Color.white;
+		Invoke("disableLight", 3);
+	}
+
+	public void spelledEffect() {
+		transform.light.enabled = true;
+		transform.light.color = Color.red;
+		Invoke("disableLight", 3);
+	}
+
+	private void disableLight() {
+		transform.light.enabled = false;
 	}
 
 	//DEPRECATED
