@@ -9,6 +9,7 @@ public abstract class EObject : Entity {
 	public bool createdByCode = false; 	// if the object was created by GUI, this should stay false.
 										// otherwise, the Create method ticks it up
 
+	public Texture2D icon;
 	
 //	public void Start(){
 //		_name = _type + 
@@ -28,5 +29,8 @@ public abstract class EObject : Entity {
 		string aux = base.toProlog();		
 		return aux + string.Format("[[weight, {0}]", this.weigth);
 	}
-	
+
+	public Texture getIcon() {
+		return icon;
+	}
 }

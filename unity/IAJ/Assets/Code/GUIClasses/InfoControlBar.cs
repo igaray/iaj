@@ -1,5 +1,7 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
+using System;
 
 public class InfoControlBar : MonoBehaviour
 {
@@ -21,8 +23,6 @@ public class InfoControlBar : MonoBehaviour
 			GUILayout.EndScrollView();
 		GUILayout.EndVertical();
 	}
-	
-	public Texture2D goldIcon;
 		
 	void AgentPanel(Agent agent) {		
 		GUILayout.BeginVertical();	
@@ -30,10 +30,28 @@ public class InfoControlBar : MonoBehaviour
 		    GUILayout.Box(agent._name);			
 			GUILayout.Label("HP: "+agent.life+"/"+agent.lifeTotal+"  "+"XP: "+agent.skill);
 			GUILayout.BeginHorizontal();
-			 GUILayout.Label("backpack:");				
+			 GUILayout.Label("backpack:");
+			 Dictionary<Type, int> typeToCount = new Dictionary<Type, int>();
+			 Dictionary<Type, Texture> typeToIcon = new Dictionary<Type, Texture>();			 			
 			 foreach (EObject obj in agent.backpack) {
-		 		GUILayout.Label(goldIcon);
+				if (typeToCount.ContainsKey(obj.GetType()))
+					typeToCount[obj.GetType()] = typeToCount[obj.GetType()] + 1;
+				else {
+					typeToCount.Add(obj.GetType(), 1);
+					typeToIcon.Add(obj.GetType(), obj.getIcon());
+				}				
 			 }
+			foreach (Type type in typeToCount.Keys) {
+			GUILayout.BeginHorizontal();
+				GUIStyle iconStyle = new GUIStyle();
+				iconStyle.margin = new RectOffset(0, 0, 5, 0);				
+				GUILayout.Label(typeToIcon[type], iconStyle, GUILayout.Width (20), GUILayout.Height (15));
+			    GUIStyle textStyle = new GUIStyle();				
+				textStyle.margin = new RectOffset(0, 10, 5, 0);				
+				textStyle.normal.textColor = Color.white;
+			    GUILayout.Label(": " + typeToCount[type], textStyle);
+			GUILayout.EndHorizontal();
+			}
 			GUILayout.EndHorizontal();
 		GUILayout.EndVertical();
 	}

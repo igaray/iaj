@@ -39,9 +39,18 @@ public class SimulationEngineComponentScript : MonoBehaviour, IEngineComponent{
 		//ss.initialize();
 		
         InvokeRepeating( "DoWork", 0, 0.1f );			
-		
-		//se.instantiateDummyAgent("dummy1", agentPrefab);
+
+		// Instantiate dummy agent for testing purposes
+		/*
+		se.instantiateDummyAgent("dummy1", agentPrefab);
+		AgentState dummy1AgState = se.simulationState.agents[se.simulationState.agentIDs["dummy1"]];
+		dummy1AgState.agentController.pickupPosCon(Gold.Create(new Vector3(0,0,0)));
+		dummy1AgState.agentController.pickupPosCon(Gold.Create(new Vector3(0,0,0)));
+		dummy1AgState.agentController.pickupPosCon(Potion.Create(new Vector3(0,0,0)));
+		dummy1AgState.agentController.pickupPosCon(Potion.Create(new Vector3(0,0,0)));
+		dummy1AgState.agentController.pickupPosCon(Potion.Create(new Vector3(0,0,0)));	
 		//se.instantiateDummyAgent("dummy2", agentPrefab);
+		*/
     }
     
     // Update is called once per frame

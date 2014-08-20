@@ -2,7 +2,11 @@ fileFormatVersion: 2
 guid: 77891e888d086804d8fd96c8445be442
 MonoImporter:
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - mySkin: {instanceID: 0}
+  - agentPrefab: {instanceID: 0}
+  - goldPrefab: {instanceID: 0}
+  - potionPrefab: {fileID: 100000, guid: a49e2070cab221d4897fdb768aefb73f, type: 2}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

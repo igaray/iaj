@@ -16,7 +16,7 @@ public class Potion : EObject {
 	public static Potion Create(Vector3 position) {
 		
 		Object  prefab = SimulationState.getInstance().potionPrefab;			
-		GameObject gameObj = Instantiate(prefab, position, Quaternion.identity) as GameObject;
+		GameObject gameObj = Instantiate(prefab, position, Quaternion.identity) as GameObject;	
 		Potion       potion    = gameObj.GetComponent<Potion>();
 		potion.createdByCode = true;
 		potion._type 		   = "potion";

@@ -2,7 +2,9 @@ fileFormatVersion: 2
 guid: 2a9c30a5cf9cc5c4e87d7df8cd093478
 MonoImporter:
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - goldIcon: {fileID: 2800000, guid: 2a65343bf6b77ca4f81fe3ae55a3b8a3, type: 3}
+  - potionIcon: {fileID: 2800000, guid: 0eb0a732ad112a541100162a44295342, type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
