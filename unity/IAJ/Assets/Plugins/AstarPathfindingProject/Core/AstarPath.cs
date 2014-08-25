@@ -2242,7 +2242,7 @@ public class AstarPath : MonoBehaviour {
 	 \see Pathfinding::NNConstraint
 	 */
 	public NNInfo GetNearest (Vector3 position) {
-		return GetNearest(position,NNConstraint.None);
+		return GetNearest(position,NNConstraint.Walkable);
 	}
 	
 	/** Returns the nearest node to a position using the specified NNConstraint.

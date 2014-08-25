@@ -110,7 +110,7 @@ public class SimulationState : IEngine{
             //}
             case ActionType.noop: {
                 result = true;
-                break;
+				break;
             }
             case ActionType.move: {
                 result = agent.movePreConf(action.targetNodeID);
@@ -138,7 +138,7 @@ public class SimulationState : IEngine{
 				} else if (action.description.Equals("sleep"))
 					result = agent.castSpellSleepPreCon(agents[agentIDs[action.targetID]].agentController, objects[action.objectID]);													
 				break;
-				}
+			}
 			}
 		} catch (System.Collections.Generic.KeyNotFoundException e) {
              SimulationState.getInstance().stdout.Send(String.Format("Key not found in SimulationState.executableAction. Precondition of action {0} Failed: {1} ", action.type.ToString(), e.ToString()));

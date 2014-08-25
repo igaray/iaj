@@ -46,7 +46,8 @@ public class AgentConnection {
 
     public void start() {
         //simulationState.stdout.Send(String.Format("AC {0}: starting thread.\n", name));
-        agentConnectionThread.Start();
+        //agentPerceptThread.Start();
+		agentConnectionThread.Start();
     }
 
     public void stop() {
@@ -76,12 +77,14 @@ public class AgentConnection {
 	
     public void run() {
 		
-		int  				  agentID  = agentState.agentID;
-	    MailBox<Action>       actions  = agentState.actions;
-    	MailBox<ActionResult> results  = agentState.results;
-    	MailBox<Percept>      percepts = agentState.percepts;
+		int  				  agentID  = agentState.agentID;	    
 		
-        MailBox<PerceptRequest> perceptRequests = simulationState.perceptRequests;
+        MailBox<PerceptRequest> perceptRequests = simulationState.perceptRequests; //To send percept requests to unity
+		MailBox<Percept>      percepts = agentState.percepts;	//To receive percepts from unity
+
+		MailBox<Action>       actions  = agentState.actions;  //To send action request to unity
+		MailBox<ActionResult> results  = agentState.results;  //To receive action result from unit
+
         Percept                 percept;
         Action                  action;
         ActionResult            result;
@@ -89,39 +92,42 @@ public class AgentConnection {
         while (!quit) {
             Thread.Sleep(0);
             try {
-                perceptRequests.Send(new PerceptRequest(agentID, percepts));    // send a percept request to unity
+				//Receive request: for perception or action.
+				receiveRequest(out action);
 
-                //simulationState.stdout.Send(String.Format("AC {0}: sending percept request.\n", name));
+				if (action == null) {	//Percept request received
 
-                percepts.Recv(out percept);                                     // block until I receive percept from unity
+                	perceptRequests.Send(new PerceptRequest(agentID, percepts));    // send a percept request to unity
 
-                //simulationState.stdout.Send(String.Format("AC {0}: percept ready, sending...\n", name));
+                	//simulationState.stdout.Send(String.Format("AC {0}: sending percept request.\n", name));
 
-                sendPercept(percept);                                           // send percept to agent
+                	percepts.Recv(out percept);                                     // block until I receive percept from unity
 
-                //simulationState.stdout.Send(String.Format("AC {0}: waiting for action...\n", name));
+                	//simulationState.stdout.Send(String.Format("AC {0}: percept ready, sending...\n", name));
 
-                receiveAction(out action);                                      // receive action from agent
+                	sendPercept(percept);                                           // send percept to agent
 
-                //simulationState.stdout.Send(String.Format("AC {0}: action received.\n", name));
+				} else {	//Action request received
+                	//simulationState.stdout.Send(String.Format("AC {0}: action received.\n", name));
 
-                if (action.type == ActionType.goodbye) {                        // if the action is say goodbye, close the connection
-                    sendResult(ActionResult.success);
-                    quit = true;
-                } else {
-                    //simulationState.stdout.Send(String.Format("AC {0}: sending action to handler...\n", name));
-                    actions.Send(action);                                       // send action to handler
-                    if (results.Recv(out result)) {                             // get action result from handler
-                        //simulationState.stdout.Send(String.Format("AC {0}: action result received.\n", name));
-                        //Thread.Sleep(action.duration);                          // sleep for the duration of the action. 
-                        //simulationState.stdout.Send(String.Format("AC {0}: sending action result to agent.\n", name));
-                        sendResult(result);                                     // send action result to agent
-                    }
-                }
-                //sendResult(ActionResult.success); //PETOR
+                	if (action.type == ActionType.goodbye) {                        // if the action is say goodbye, close the connection
+                    	sendResult(ActionResult.success);
+                    	quit = true;
+                	} else {
+                    	//simulationState.stdout.Send(String.Format("AC {0}: sending action to handler...\n", name));
+                    	actions.Send(action);                                       // send action to handler
+                    	if (results.Recv(out result)) {                             // get action result from handler
+                        	//simulationState.stdout.Send(String.Format("AC {0}: action result received.\n", name));
+                        	//Thread.Sleep(action.duration);                          // sleep for the duration of the action. 
+                        	//simulationState.stdout.Send(String.Format("AC {0}: sending action result to agent.\n", name));
+                        	sendResult(result);                                     // send action result to agent
+                    	}
+                	}
+                	//sendResult(ActionResult.success); //PETOR
 
-                //simulationState.stdout.Send(String.Format("AC {0}: perceive-act loop iteration complete.\n", name));
-            }
+                	//simulationState.stdout.Send(String.Format("AC {0}: perceive-act loop iteration complete.\n", name));
+            	}
+			}
             catch (System.ObjectDisposedException) {
                 quit = true;
             }
@@ -139,6 +145,7 @@ public class AgentConnection {
             //simulationState.stdout.Send(String.Format("AC {0}: Error while closing connection.\n", name));
         }
     }
+	
 
     private bool authenticate() {
         bool   result = false;
@@ -182,9 +189,9 @@ public class AgentConnection {
         streamWriter.Flush();
     }
 
-    private void receiveAction(out Action action) {
+    private void receiveRequest(out Action action) {
 
-        action = new Action();
+        action = null;
 
         // Reading from socket
 
@@ -194,6 +201,8 @@ public class AgentConnection {
         //simulationState.stdout.Send(String.Format("AC {0}: received action:\n{1}\n", name, message));
 
         // convert xml into action object
+		if (message.Contains("perc_req"))
+			return;
         try {
             action = new Action(simulationState, agentState.agentID, message);
         }

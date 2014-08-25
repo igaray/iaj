@@ -51,6 +51,7 @@ public class SimulationEngineComponentScript : MonoBehaviour, IEngineComponent{
 		dummy1AgState.agentController.pickupPosCon(Potion.Create(new Vector3(0,0,0)));	
 		//se.instantiateDummyAgent("dummy2", agentPrefab);
 		*/
+		se.start();
     }
     
     // Update is called once per frame
@@ -64,8 +65,9 @@ public class SimulationEngineComponentScript : MonoBehaviour, IEngineComponent{
         scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUILayout.Width(512), GUILayout.Height(512));
         GUILayout.Box(outputText);
         GUILayout.EndScrollView();
-		*/
-		
+
+
+
         if (GUI.Button(new Rect(4,682,128,20), "Start")) {			
             ss.stdout.Send("Starting simulation engine...\n");
             se.start();
@@ -74,8 +76,9 @@ public class SimulationEngineComponentScript : MonoBehaviour, IEngineComponent{
         if (GUI.Button(new Rect(132,682,128,20), "Stop")) {
             ss.stdout.Send("Stopping simulation engine...\n");
             se.stop();
-        }		
-		
+        }
+        */
+
     }
 	
 	//public GUIStyle timeLabel;

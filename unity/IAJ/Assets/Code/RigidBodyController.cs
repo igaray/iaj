@@ -82,7 +82,9 @@ public class RigidBodyController : MonoBehaviour {
 	
 	void movementStopped(){
 		movementStoppedInvoked = false;
+		SimulationEngineComponentScript.ss.stdout.Send("movementStopped invoked");
 		if (this.rigidbody.velocity.magnitude < 0.1f){
+			SimulationEngineComponentScript.ss.stdout.Send("movementStopped took effect");
 			moving = false;
 			if ((target - transform.position).magnitude < _proximityRange){
 				this._agent.stoppedAction();

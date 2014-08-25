@@ -211,6 +211,19 @@ namespace Pathfinding {
 				return n;
 			}
 		}
+
+		/** Returns a constraint which will not filter the results */
+		public static NNConstraint Walkable {
+			get {
+				NNConstraint n = new NNConstraint ();
+				n.constrainWalkability = true;
+				n.constrainArea = false;
+				n.constrainTags = false;
+				n.constrainDistance = false;
+				n.graphMask = -1;
+				return n;
+			}
+		}
 		
 		/** Default constructor. Equals to the property #Default */
 		public NNConstraint () {
