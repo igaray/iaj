@@ -405,15 +405,18 @@ public class Agent : Entity {
 				1 << LayerMask.NameToLayer(layer)); // usa mascaras, con el << agregas con BITWISE-OR
 		List<ObjectType> aux = new List<ObjectType>();
 		
-    	foreach (Collider hit in colliders) {		
-			if (hit.tag == type)
-				aux.Add(hit.gameObject.GetComponent<ObjectType>());
+    	foreach (Collider hit in colliders) {    		
+			if (hit.tag == type) {
+				ObjectType hitObj = hit.gameObject.GetComponent<ObjectType>();
+				GridNode hitNode = AstarPath.active.GetNearest(hitObj.transform.position).node as GridNode;
+				if (isVisibleNode(hitNode) && hitNode.walkable)  //to avoid perceiving an object and not perceiving its associated node.
+					aux.Add(hit.gameObject.GetComponent<ObjectType>());
+			} 
     	}
 		return aux;
 	}
 	
 	private List<PerceivableNode> perceptNodes(){
-		//GridGraph graph = AstarPath.active.astarData.gridGraph;
 		GridNode gridNode = AstarPath.active.GetNearest(transform.position).node as GridNode;
 		List   <PerceivableNode> connections = new List   <PerceivableNode>();
 		Queue  <BFNode>          q           = new Queue  <BFNode>         ();
@@ -423,12 +426,13 @@ public class Agent : Entity {
 		q.Enqueue(t);
 		while (q.Count > 0){
 			t = q.Dequeue();
-			connections.Add(t.node);
+			if (t.node._node.walkable) //Si el nodo seleccionado es transitable, entonces lo agrego al conjunto resultado.
+				connections.Add(t.node);
 			if (t.depth < _depthOfSight){ //si no está en el límite, agr
-				foreach(Node node in t.node){
+				foreach(Node node in t){ //Itero por vecinos conectados y no conectados del nodo en la grilla, y los agrego a la frontera
+										 //siempre que esten en dentro de la distancia de vision.
 					if (!(visited.Contains(node)) && //famoso if de reglón de ancho, warpeado
-						isVisibleNode(node) &&
-						node.walkable)
+						isVisibleNode(node))
 					{	
 						visited.Add(node);
 						q.Enqueue(new BFNode(t.depth + 1, node as GridNode));
@@ -464,5 +468,33 @@ class BFNode{
 	public BFNode(int depth, GridNode node){
 		this.node  = new PerceivableNode(node);
 		this.depth = depth;
+	}
+
+	// Devuelve un iterador para los vecinos del nodo. Incluye los vecinos del nodo en la grilla no conectados por arcos,
+	// dado que nos va a interesar expandir la busqueda desde ellos para llegar a otros nodos efectivamente 
+	// conectados al grafo principal.
+	public IEnumerator<Node> GetEnumerator(){
+		GridGraph graph            = AstarPath.active.astarData.gridGraph;
+		Node[]    nodes            = graph.nodes;
+		int []    neighbourOffsets = graph.neighbourOffsets;
+		Node      aux;
+		int       index;
+		
+		for (int i = 0; i < 8; i++){ //las 8 conexiones posibles de cada nodo
+			index = node._node.GetIndex();
+			
+			if(node._node.GetConnection(i)){ //connected nodes
+				aux = nodes[index + neighbourOffsets[i]];
+				if (aux.walkable){	
+					yield return aux;
+				}
+			} else { //disconnected nodes
+				int neighIndex = index + neighbourOffsets[i];
+				if (neighIndex >= 0 && neighIndex < nodes.Count()) {
+					aux = nodes[neighIndex];
+					yield return aux ;
+				}
+			}
+		}
 	}
 }

@@ -47,7 +47,7 @@ public class SimulationConfig {
 				}
             }
 
-            Debug.LogError("Config loaded.");
+            //Debug.LogError("Config loaded.");
         }
         catch (Exception) {
             Debug.LogError("No config file found.");
