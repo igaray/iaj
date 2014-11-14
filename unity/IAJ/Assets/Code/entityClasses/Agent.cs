@@ -60,6 +60,7 @@ public class Agent : Entity {
 	public GUIStyle infoStyle;
 	public GUIStyle nameStyle;	
 	public GUIStyle lifeStyle;
+	public GUIStyle lifeLevelStyle;
 	
 	void OnGUI () {
 		Vector3 screenPos = Camera.mainCamera.WorldToScreenPoint(transform.position);
@@ -88,6 +89,21 @@ public class Agent : Entity {
 		this._controller = this.GetComponent<RigidBodyController>();	
 		InvokeRepeating("execute", 0, _delta);
 		rigidbody.sleepVelocity = 0f;
+
+		lifeLevelStyle = new GUIStyle( GUI.skin.box );
+		//lifeLevelStyle.normal.background = MakeTex( 2, 2, Color.green );
+	}
+
+	private Texture2D MakeTex( int width, int height, Color col ) {
+		Color[] pix = new Color[width * height];
+		for( int i = 0; i < pix.Length; ++i )
+		{
+			pix[ i ] = col;
+		}
+		Texture2D result = new Texture2D( width, height );
+		result.SetPixels( pix );
+		result.Apply();
+		return result;
 	}
 	
 	public void setCallback(ActionFinished s){

@@ -8,7 +8,7 @@ public class InfoControlBar : MonoBehaviour
 	Vector2 scrollPosition;
 	
 	void OnGUI () {
-		GUI.Window(0, new Rect(Screen.width - 190, 20, 180, 300), WindowFunction, "Game Control / Info");		
+		GUI.Window(0, new Rect(Screen.width - 190, 10, 180, 530), WindowFunction, "Game Control / Info");		
 	}
 	
 	public GUIStyle timeLabelStyle;
@@ -30,7 +30,7 @@ public class InfoControlBar : MonoBehaviour
 		    GUILayout.Box(agent._name);			
 			GUILayout.Label("HP: "+agent.life+"/"+agent.lifeTotal+"  "+"XP: "+agent.skill);
 			GUILayout.BeginHorizontal();
-			 GUILayout.Label("backpack:");
+			 GUILayout.Label("BP:");
 			 Dictionary<Type, int> typeToCount = new Dictionary<Type, int>();
 			 Dictionary<Type, Texture> typeToIcon = new Dictionary<Type, Texture>();			 			
 			 foreach (EObject obj in agent.backpack) {

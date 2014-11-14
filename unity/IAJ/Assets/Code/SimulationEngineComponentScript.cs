@@ -28,6 +28,7 @@ public class SimulationEngineComponentScript : MonoBehaviour, IEngineComponent{
 			return ss;
 		}
 	}
+	private bool paused = false;
 
     
     // Use this for initialization
@@ -78,6 +79,14 @@ public class SimulationEngineComponentScript : MonoBehaviour, IEngineComponent{
             se.stop();
         }
         */
+
+		if (GUI.Button(new Rect(4,682,128,20), paused ? "Resume" : "Pause")) {
+			paused = !paused;
+			if (paused)
+				Time.timeScale = 0;
+			else
+				Time.timeScale = 1;			
+		}
 
     }
 	
