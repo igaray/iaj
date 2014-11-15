@@ -77,21 +77,20 @@ public class Agent : Entity {
 			int lifeWidth = (int)(totalLifeWidth*((float)life/lifeTotal));
 			GUILayout.Box("",GUILayout.Width(totalLifeWidth), GUILayout.Height(10));			
 			Rect lastRect = GUILayoutUtility.GetLastRect();
-			lastRect.Set(lastRect.x, lastRect.y, lifeWidth, lastRect.width);
-			GUI.Box(lastRect,"");
+			lastRect.Set(lastRect.x, lastRect.y, lifeWidth, lastRect.width);			
+			lifeLevelStyle = new GUIStyle(GUI.skin.box);
+			lifeLevelStyle.normal.background = MakeTex(2, 2, Color.green);			
+			GUI.Box(lastRect,"", lifeLevelStyle);			
 			GUILayout.EndVertical();
 		GUILayout.EndVertical();
 		GUI.EndGroup();
 	}
-	
+
 	public override void Start(){
 		base.Start();		
-		this._controller = this.GetComponent<RigidBodyController>();	
+		this._controller = this.GetComponent<RigidBodyController>();
 		InvokeRepeating("execute", 0, _delta);
 		rigidbody.sleepVelocity = 0f;
-
-		lifeLevelStyle = new GUIStyle( GUI.skin.box );
-		//lifeLevelStyle.normal.background = MakeTex( 2, 2, Color.green );
 	}
 
 	private Texture2D MakeTex( int width, int height, Color col ) {
